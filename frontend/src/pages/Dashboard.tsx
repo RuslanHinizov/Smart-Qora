@@ -90,7 +90,7 @@ export function Dashboard() {
           <div className="health-list">
             <div>
               <span>{t.model}</span>
-              <strong>YOLOE-26s</strong>
+              <strong>YOLOv8s</strong>
             </div>
             <div>
               <span>{t.gpu}</span>
