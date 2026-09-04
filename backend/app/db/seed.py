@@ -16,10 +16,13 @@ async def ensure_default_camera(session: AsyncSession, settings: Settings) -> Ca
     if camera is not None:
         return camera
     (p1x, p1y), (p2x, p2y) = settings.count_line
+    l2 = settings.count_line2_pts
     camera = Camera(
         name=settings.default_camera_name,
         source=settings.default_camera_source or str(settings.video_source),
         line_p1_x=p1x, line_p1_y=p1y, line_p2_x=p2x, line_p2_y=p2y,
+        line2_p1_x=l2[0][0] if l2 else None, line2_p1_y=l2[0][1] if l2 else None,
+        line2_p2_x=l2[1][0] if l2 else None, line2_p2_y=l2[1][1] if l2 else None,
         inside_direction=LineDirection(settings.inside_direction),
         frame_skip=settings.frame_skip, stream_fps=settings.stream_fps,
     )

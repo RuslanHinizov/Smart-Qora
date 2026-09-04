@@ -38,6 +38,7 @@ class CountingService:
         self.totals = RunningTotals()
         self.current_inside = 0
         self.line: tuple[tuple[int, int], tuple[int, int]] = ((0, 0), (0, 0))
+        self.line2: tuple[tuple[int, int], tuple[int, int]] | None = None
         self.running = False
         self.last_frame_at: float | None = None
 
@@ -54,8 +55,9 @@ class CountingService:
 
             source = camera.source or str(self.settings.video_source)
             source = int(source) if source.isdigit() else source
-            (p1, p2), inside = self._resolve_line(camera)
+            (p1, p2), inside, line2 = self._resolve_line(camera)
             self.line = (p1, p2)
+            self.line2 = line2
             stream_fps = max(camera.stream_fps or self.settings.stream_fps, 1)
             confidence = camera.confidence if camera.confidence is not None else self.settings.confidence
             iou = camera.iou if camera.iou is not None else self.settings.iou
@@ -79,6 +81,7 @@ class CountingService:
                     p1, p2, inside,
                     min_track_updates=self.settings.count_min_track_updates,
                     entry_zone=self.settings.count_entry_zone_rect,
+                    line2=line2,
                 )
                 self.smoother = CenterSmoother()
                 self.detector.reset_tracker()
@@ -118,7 +121,7 @@ class CountingService:
     async def _publish_frame(self, frame, result) -> None:
         tally = f"IN {self.totals.total_in}   OUT {self.totals.total_out}   INSIDE {self.current_inside}"
         try:
-            jpeg = await asyncio.to_thread(annotate_jpeg, frame, result, self.line, tally)
+            jpeg = await asyncio.to_thread(annotate_jpeg, frame, result, self.line, tally, self.line2)
             frame_bus.publish(jpeg)
         except Exception:  # noqa: BLE001 - a preview failure must never stop counting
             logger.exception("frame_publish_failed")
@@ -126,9 +129,10 @@ class CountingService:
     def _resolve_line(self, camera):
         coords = (camera.line_p1_x, camera.line_p1_y, camera.line_p2_x, camera.line_p2_y)
         inside = camera.inside_direction.value if camera.inside_direction else self.settings.inside_direction
-        if None in coords:
-            return self.settings.count_line, inside
-        return ((coords[0], coords[1]), (coords[2], coords[3])), inside
+        line = self.settings.count_line if None in coords else ((coords[0], coords[1]), (coords[2], coords[3]))
+        c2 = (camera.line2_p1_x, camera.line2_p1_y, camera.line2_p2_x, camera.line2_p2_y)
+        line2 = None if None in c2 else ((c2[0], c2[1]), (c2[2], c2[3]))
+        return line, inside, line2
 
     async def _save_event(self, track_id: int, animal_type: str, crossing: CrossingEvent, confidence: float) -> None:
         now = datetime.now(timezone.utc)

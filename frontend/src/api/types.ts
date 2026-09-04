@@ -47,6 +47,10 @@ export type Camera = {
   line_p1_y: number | null;
   line_p2_x: number | null;
   line_p2_y: number | null;
+  line2_p1_x: number | null;
+  line2_p1_y: number | null;
+  line2_p2_x: number | null;
+  line2_p2_y: number | null;
   inside_direction: InsideDirection | null;
   confidence: number | null;
   iou: number | null;

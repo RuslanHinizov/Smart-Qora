@@ -85,12 +85,18 @@ lands the count within ~±5%. Levers, in order of payoff:
    crossing re-fires once the track matures.
 3. `COUNT_ENTRY_ZONE="x1,y1,x2,y2"` (env) — only count tracks whose centre was inside
    this box at some point. Filters edge-of-frame flicker.
-4. `TRACKER=botsort_reid.yaml` — appearance ReID; needs a real ReID model
+4. **Second line** — set `line2` on the camera (draw it in the editor). A track must
+   then cross both lines *in order* to count; hovering on one line or clipping it at
+   an angle does not. Helps where a single line over-counts from line-hovering.
+   Caveat: if tracks fragment badly, a broken track can't complete the A→B sequence
+   and gets missed — on the dense ICAERUS clips it under-counted vs a single line.
+   Keep the two lines close together (≈40-60 px). Test with `count_video.py --line2`.
+5. `TRACKER=botsort_reid.yaml` — appearance ReID; needs a real ReID model
    (`model:` → osnet path) to actually help, `model: auto` did not on the test clips.
-5. Tune `track_buffer` / `match_thresh` / `new_track_thresh` in a custom tracker yaml.
+6. Tune `track_buffer` / `match_thresh` / `new_track_thresh` in a custom tracker yaml.
 
-`python scripts/count_video.py <clip> --line x1,y1,x2,y2 --inside UP` runs the exact
-pipeline offline for quick before/after checks.
+`python scripts/count_video.py <clip> --line x1,y1,x2,y2 [--line2 …] --inside UP` runs
+the exact pipeline offline for quick before/after checks.
 
 ## Adding a species (cattle, goat, horse, camel, …)
 

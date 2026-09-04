@@ -31,7 +31,8 @@ def run(video: Path, args) -> dict:
     det.reset_tracker()
     counter = LineCrossingCounter(
         (args.line[0], args.line[1]), (args.line[2], args.line[3]), args.inside,
-        min_track_updates=args.min_track_updates)
+        min_track_updates=args.min_track_updates,
+        line2=((args.line2[0], args.line2[1]), (args.line2[2], args.line2[3])) if args.line2 else None)
     smoother = CenterSmoother()
 
     cap = cv2.VideoCapture(str(video))
@@ -82,6 +83,7 @@ def main() -> int:
     ap.add_argument("videos", nargs="+", help="paths or globs")
     ap.add_argument("--model", default="models/best.pt")
     ap.add_argument("--line", default="0,570,1920,660", help="x1,y1,x2,y2")
+    ap.add_argument("--line2", default="", help="x1,y1,x2,y2 — second tripwire (dual-line mode)")
     ap.add_argument("--inside", default="UP", choices=["UP", "DOWN", "LEFT", "RIGHT"])
     ap.add_argument("--frame-skip", type=int, default=2)
     ap.add_argument("--min-track-updates", type=int, default=3)
@@ -92,6 +94,7 @@ def main() -> int:
     ap.add_argument("--tracker", default="botsort_reid.yaml")
     args = ap.parse_args()
     args.line = [int(v) for v in args.line.split(",")]
+    args.line2 = [int(v) for v in args.line2.split(",")] if args.line2 else None
 
     paths: list[Path] = []
     for pattern in args.videos:

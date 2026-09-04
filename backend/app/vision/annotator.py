@@ -27,7 +27,8 @@ def _color(track_id: int | None) -> tuple[int, int, int]:
         return _FALLBACK_BOX
 
 
-def annotate_jpeg(frame, result, line: tuple[Point, Point], tally: str, quality: int = 70) -> bytes:
+def annotate_jpeg(frame, result, line: tuple[Point, Point], tally: str,
+                  line2: tuple[Point, Point] | None = None, quality: int = 70) -> bytes:
     canvas = np.ascontiguousarray(frame).copy()
     boxes = getattr(result, "boxes", None)
     if boxes is not None:
@@ -40,8 +41,10 @@ def annotate_jpeg(frame, result, line: tuple[Point, Point], tally: str, quality:
                 cv2.putText(canvas, str(tid), (x1 + 1, max(y1 - 3, 9)),
                             _FONT, 0.4, colour, 1, cv2.LINE_AA)
 
-    (x1, y1), (x2, y2) = line
-    cv2.line(canvas, (x1, y1), (x2, y2), _LINE_COLOR, 2, cv2.LINE_AA)
+    for ln in (line, line2):
+        if ln:
+            (x1, y1), (x2, y2) = ln
+            cv2.line(canvas, (x1, y1), (x2, y2), _LINE_COLOR, 2, cv2.LINE_AA)
     cv2.putText(canvas, tally, (14, 34), _FONT, 0.8, (0, 0, 0), 4, cv2.LINE_AA)
     cv2.putText(canvas, tally, (14, 34), _FONT, 0.8, (255, 255, 255), 1, cv2.LINE_AA)
 

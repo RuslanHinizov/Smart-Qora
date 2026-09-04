@@ -15,6 +15,10 @@ const EMPTY: CameraInput = {
   line_p1_y: null,
   line_p2_x: null,
   line_p2_y: null,
+  line2_p1_x: null,
+  line2_p1_y: null,
+  line2_p2_x: null,
+  line2_p2_y: null,
   inside_direction: null,
   confidence: null,
   iou: null,
@@ -181,6 +185,31 @@ export function Cameras() {
                   }
                 />
               </div>
+              <div className="form-row">
+                <NumPair
+                  label={t.line2Start}
+                  x={editing.input.line2_p1_x}
+                  y={editing.input.line2_p1_y}
+                  onChange={(x, y) =>
+                    setEditing({
+                      ...editing,
+                      input: { ...editing.input, line2_p1_x: x, line2_p1_y: y },
+                    })
+                  }
+                />
+                <NumPair
+                  label={t.line2End}
+                  x={editing.input.line2_p2_x}
+                  y={editing.input.line2_p2_y}
+                  onChange={(x, y) =>
+                    setEditing({
+                      ...editing,
+                      input: { ...editing.input, line2_p2_x: x, line2_p2_y: y },
+                    })
+                  }
+                />
+              </div>
+              <span className="hint">{t.dualLineHint}</span>
               <div className="field">
                 <label>{t.insideDirection}</label>
                 <select

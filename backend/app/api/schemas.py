@@ -25,6 +25,10 @@ class CameraCreate(BaseModel):
     line_p1_y: int | None = None
     line_p2_x: int | None = None
     line_p2_y: int | None = None
+    line2_p1_x: int | None = None
+    line2_p1_y: int | None = None
+    line2_p2_x: int | None = None
+    line2_p2_y: int | None = None
     inside_direction: LineDirection | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
     iou: float | None = Field(default=None, ge=0, le=1)

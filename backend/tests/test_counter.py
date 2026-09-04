@@ -70,6 +70,44 @@ def test_gated_fragment_still_counts_once_it_matures():
     assert ev and ev.direction == "IN"
 
 
+def _dual(**kw):
+    return LineCrossingCounter((0, 40), (100, 40), "DOWN", dead_zone=2, cooldown_seconds=0,
+                               line2=((0, 60), (100, 60)), **kw)
+
+
+def test_dual_line_counts_a_full_ordered_pass_as_in():
+    c = _dual()
+    ev = None
+    for i, y in enumerate([20, 35, 50, 65, 80]):   # before A -> gate -> past B
+        ev = c.update(1, (50, y), i) or ev
+    assert ev and ev.direction == "IN"
+
+
+def test_dual_line_counts_reverse_pass_as_out():
+    c = _dual()
+    ev = None
+    for i, y in enumerate([80, 65, 50, 35, 20]):   # past B -> gate -> before A
+        ev = c.update(1, (50, y), i) or ev
+    assert ev and ev.direction == "OUT"
+
+
+def test_dual_line_ignores_a_track_that_enters_the_gate_and_turns_back():
+    c = _dual()
+    events = [c.update(1, (50, y), i) for i, y in enumerate([20, 45, 50, 45, 20])]
+    assert not any(events)
+
+
+def test_dual_line_ignores_a_track_that_only_touches_one_line():
+    c = _dual()
+    events = [c.update(1, (50, y), i) for i, y in enumerate([20, 30, 44, 30, 20])]
+    assert not any(events)
+
+
+def test_dual_line_endpoints_must_differ():
+    with pytest.raises(ValueError):
+        LineCrossingCounter((0, 0), (10, 0), line2=((5, 5), (5, 5)))
+
+
 def test_entry_zone_requires_prior_registration():
     # DOWN is "inside"; animals enter from the far-outside strip (y 0..20)
     counter = LineCrossingCounter((0, 50), (100, 50), "DOWN", dead_zone=1,

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     inside_direction: Literal["UP", "DOWN", "LEFT", "RIGHT"] = "DOWN"
     count_min_track_updates: int = 3      # ignore a crossing until a track has this many hits
     count_entry_zone: str = ""            # "x1,y1,x2,y2" — only count tracks seen inside it
+    count_line2: str = ""                 # "x1,y1,x2,y2" — a 2nd tripwire; a track must cross both in order
     allowed_classes: list[str] = ["sheep", "cattle", "goat", "horse"]
     default_language: Literal["ru", "kk", "en", "tr"] = "ru"
     telegram_bot_token: str = ""
@@ -75,11 +76,11 @@ class Settings(BaseSettings):
             raise ValueError("must be >= 0")
         return value
 
-    @field_validator("count_entry_zone")
+    @field_validator("count_entry_zone", "count_line2")
     @classmethod
-    def valid_entry_zone(cls, value: str) -> str:
+    def valid_coord_quad(cls, value: str) -> str:
         if value and len(value.split(",")) != 4:
-            raise ValueError('COUNT_ENTRY_ZONE must be "x1,y1,x2,y2" or empty')
+            raise ValueError('must be "x1,y1,x2,y2" or empty')
         return value
 
     @field_validator("stream_fps", "telegram_aggregation_seconds", "access_token_ttl_hours")
@@ -110,12 +111,20 @@ class Settings(BaseSettings):
     def count_line(self) -> tuple[tuple[int, int], tuple[int, int]]:
         return ((self.count_line_p1_x, self.count_line_p1_y), (self.count_line_p2_x, self.count_line_p2_y))
 
+    @staticmethod
+    def _quad(value: str) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        if not value:
+            return None
+        x1, y1, x2, y2 = (int(v) for v in value.split(","))
+        return ((x1, y1), (x2, y2))
+
     @property
     def count_entry_zone_rect(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
-        if not self.count_entry_zone:
-            return None
-        x1, y1, x2, y2 = (int(v) for v in self.count_entry_zone.split(","))
-        return ((x1, y1), (x2, y2))
+        return self._quad(self.count_entry_zone)
+
+    @property
+    def count_line2_pts(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        return self._quad(self.count_line2)
 
 
 @lru_cache
