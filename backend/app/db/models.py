@@ -101,11 +101,24 @@ class AppSettings(Base):
     telegram_bot_token: Mapped[str] = mapped_column(Text, default="")
     telegram_chat_id: Mapped[str] = mapped_column(Text, default="")
     telegram_aggregation_seconds: Mapped[int] = mapped_column(Integer, default=5)
+    telegram_digest_hour: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    telegram_idle_hours: Mapped[int | None] = mapped_column(Integer, nullable=True)
     default_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     default_iou: Mapped[float | None] = mapped_column(Float, nullable=True)
     default_frame_skip: Mapped[int | None] = mapped_column(Integer, nullable=True)
     stream_fps: Mapped[int | None] = mapped_column(Integer, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+
+class TelegramChat(Base):
+    """A Telegram chat that receives alerts / uses the bot. Authorisation is the
+    CSV in ``AppSettings.telegram_chat_id``; this row only holds the chat's
+    language preference (``/dil``), defaulting to Russian."""
+
+    __tablename__ = "telegram_chats"
+    chat_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    language: Mapped[str] = mapped_column(String(2), default="ru")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
 class User(Base):

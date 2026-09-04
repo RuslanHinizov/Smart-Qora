@@ -32,6 +32,8 @@ export function Settings() {
       setDraft({
         default_language: settings.data.default_language,
         telegram_aggregation_seconds: settings.data.telegram_aggregation_seconds,
+        telegram_digest_hour: settings.data.telegram_digest_hour,
+        telegram_idle_hours: settings.data.telegram_idle_hours,
         default_confidence: settings.data.default_confidence,
         default_iou: settings.data.default_iou,
         default_frame_skip: settings.data.default_frame_skip,
@@ -104,6 +106,7 @@ export function Settings() {
             value={draft.telegram_chat_id ?? ""}
             onChange={(e) => patch({ telegram_chat_id: e.target.value })}
           />
+          <span className="hint">{t.telegramChatIdHint}</span>
         </div>
         <div className="field">
           <label>{t.aggregationSeconds}</label>
@@ -114,6 +117,29 @@ export function Settings() {
             value={draft.telegram_aggregation_seconds ?? 5}
             onChange={(e) => patch({ telegram_aggregation_seconds: Number(e.target.value) })}
           />
+        </div>
+        <div className="form-row">
+          <div className="field">
+            <label>{t.telegramDigestHour}</label>
+            <input
+              className="input"
+              type="number"
+              min={0}
+              max={23}
+              value={draft.telegram_digest_hour ?? ""}
+              onChange={(e) => patch({ telegram_digest_hour: num(e.target.value) })}
+            />
+          </div>
+          <div className="field">
+            <label>{t.telegramIdleHours}</label>
+            <input
+              className="input"
+              type="number"
+              min={1}
+              value={draft.telegram_idle_hours ?? ""}
+              onChange={(e) => patch({ telegram_idle_hours: num(e.target.value) })}
+            />
+          </div>
         </div>
 
         <div className="panel-head">

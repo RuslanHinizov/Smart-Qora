@@ -27,6 +27,7 @@ services:
       CORS_ORIGINS: ""
       NVIDIA_VISIBLE_DEVICES: all
       WEB_CONCURRENCY: "1"
+      TZ: ${TZ:-Asia/Almaty}     # the Telegram daily-digest hour is in this timezone
     volumes: ["./models:/app/models", "./videos:/app/videos"]
     depends_on:
       db: {condition: service_healthy}

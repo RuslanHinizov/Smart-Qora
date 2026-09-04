@@ -86,6 +86,8 @@ class SettingsRead(BaseModel):
     default_language: str
     telegram_configured: bool
     telegram_aggregation_seconds: int
+    telegram_digest_hour: int | None
+    telegram_idle_hours: int | None
     default_confidence: float | None
     default_iou: float | None
     default_frame_skip: int | None
@@ -97,6 +99,8 @@ class SettingsUpdate(BaseModel):
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
     telegram_aggregation_seconds: int | None = Field(default=None, gt=0)
+    telegram_digest_hour: int | None = Field(default=None, ge=0, le=23)
+    telegram_idle_hours: int | None = Field(default=None, ge=1, le=168)
     default_confidence: float | None = Field(default=None, ge=0, le=1)
     default_iou: float | None = Field(default=None, ge=0, le=1)
     default_frame_skip: int | None = Field(default=None, ge=0)

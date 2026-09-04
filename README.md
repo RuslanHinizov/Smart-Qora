@@ -108,6 +108,21 @@ A track's smoothed center must cross fully from one side of the line to the othe
 dead zone; touching the line never counts) in the direction that makes it "enter". Set it
 visually by clicking on the live snapshot in the camera editor, or as pixel coordinates.
 
+### Telegram
+
+Create a bot with [@BotFather](https://t.me/BotFather), then on the **Settings** page paste
+the token and one or more **chat ids** (comma-separated — these are the *only* chats the bot
+talks to). Changes apply immediately, no restart. Send `/start` to the bot from a listed
+chat to get going.
+
+| what | detail |
+|---|---|
+| Crossing alerts | `🐄 ENTERED …` — a burst is grouped over `TELEGRAM_AGGREGATION_SECONDS` |
+| Daily summary | set an hour (0–23, container `TZ`) on the Settings page; blank = off |
+| Fault alerts | AI worker stopped / camera offline / recovered; optional "no crossings for N hours" |
+| Commands | `/status` `/today` `/week` `/photo` (annotated snapshot) `/dil ru\|kk\|en\|tr` `/help` |
+| Language | defaults to Russian; each chat sets its own with `/dil` |
+
 ---
 
 ## Remote access

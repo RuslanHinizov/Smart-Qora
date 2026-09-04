@@ -61,6 +61,8 @@ export type AppSettings = {
   default_language: string;
   telegram_configured: boolean;
   telegram_aggregation_seconds: number;
+  telegram_digest_hour: number | null;
+  telegram_idle_hours: number | null;
   default_confidence: number | null;
   default_iou: number | null;
   default_frame_skip: number | null;
@@ -72,6 +74,8 @@ export type SettingsInput = Partial<{
   telegram_bot_token: string;
   telegram_chat_id: string;
   telegram_aggregation_seconds: number;
+  telegram_digest_hour: number | null;
+  telegram_idle_hours: number | null;
   default_confidence: number | null;
   default_iou: number | null;
   default_frame_skip: number | null;

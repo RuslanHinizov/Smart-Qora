@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 import os
@@ -20,7 +21,8 @@ from app.db.seed import ensure_admin, ensure_default_camera
 from app.services.websocket_manager import websockets
 from app.services.worker_supervisor import WorkerSupervisor
 from app.telegram.bot import command_bot
-from app.telegram.runtime import apply_telegram_config
+from app.telegram.runtime import apply_telegram_config, set_status_provider
+from app.telegram.watchers import digest_loop, health_watcher
 
 configure_logging()
 settings = get_settings()
@@ -36,7 +38,14 @@ async def lifespan(app: FastAPI):
         await ensure_admin(session, settings)
         await ensure_default_camera(session, settings)
 
-    await apply_telegram_config()
+    def _status() -> dict:
+        sup = getattr(app.state, "supervisor", None)
+        return {
+            "camera": sup.camera_status if sup else "OFFLINE",
+            "ai": "ACTIVE" if sup and sup.running else "IDLE",
+        }
+
+    set_status_provider(_status)
 
     supervisor = None
     app.state.supervisor = None
@@ -46,7 +55,14 @@ async def lifespan(app: FastAPI):
         supervisor.start()
     else:
         logger.warning("vision_worker_not_started", extra={"model_path": settings.model_path})
+
+    await apply_telegram_config()
+    watchers = [asyncio.create_task(health_watcher(app), name="tg-health"),
+                asyncio.create_task(digest_loop(app), name="tg-digest")]
     yield
+    for task in watchers:
+        task.cancel()
+    await asyncio.gather(*watchers, return_exceptions=True)
     if supervisor is not None:
         await supervisor.stop()
     await command_bot.stop()
