@@ -1,0 +1,65 @@
+# Fine-tuning config for train.py. Pinned so a run is reproducible.
+# Canonical class order matches backend/app/vision/classes.py.
+
+model: models/yolov8s.pt   # base weights to fine-tune (Ultralytics fetches yolov8s.pt if absent)
+data: datasets/sheep-gate/data.yaml
+
+epochs: 60
+imgsz: 1024                # 8 GB RTX 4060 Laptop; production infers at 1280 (scale-robust)
+batch: 16                  # explicit — autobatch's no-AMP probe over-estimates and OOMs the context
+patience: 15
+device: 0
+half: true
+workers: 4
+seed: 0
+cache: false              # 1440x1080 JPGs, keep them on disk
+
+# The Zenodo set is sheep-only; freeze the backbone + keep LR low so the base
+# model's cattle/goat/horse detection does not collapse (catastrophic forgetting).
+freeze: 10
+lr0: 0.002
+lrf: 0.01
+warmup_epochs: 3.0
+
+# Augmentation — gate footage is top-down and fairly uniform.
+mosaic: 1.0
+close_mosaic: 10
+hsv_h: 0.015
+hsv_s: 0.5
+hsv_v: 0.4
+degrees: 8.0
+translate: 0.1
+scale: 0.4
+fliplr: 0.5
+flipud: 0.1
+
+project: runs
+name: sheep-gate
+exist_ok: false
+
+# ── eval.py / counting_eval.py ────────────────────────────────────────────────
+# Inference settings mirror backend/.env.example so the numbers reflect what the
+# deployed worker would actually produce.
+eval:
+  imgsz: 1280
+  conf: 0.25
+  iou: 0.70
+  tracker: botsort.yaml
+  device: 0
+  half: true
+  frame_skip: 0
+  allowed_classes: [sheep, cattle, goat, horse]
+
+# Acceptance gate — counting_eval.py / eval.py exit non-zero if any target is missed.
+gate:
+  map50_sheep: 0.90
+  map5095_all: 0.60
+  counting_error_pct: 5.0
+  id_switch_ratio: 1.5
+
+# Dataset split (contiguous per-clip blocks so near-duplicate neighbouring
+# frames do not leak between splits). Must sum to 1.0.
+split:
+  train: 0.70
+  val: 0.15
+  test: 0.15

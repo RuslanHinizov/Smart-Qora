@@ -16,9 +16,10 @@ models/*.ts
 models/*.pth
 videos/*.mp4
 videos/*.MP4
-datasets/**
-!datasets/**/data.yaml
-!datasets/**/README.md
+datasets/_downloads/
+datasets/**/images/
+datasets/**/labels/
+datasets/**/_tmp_video/
 runs/
 training/reports/
 coverage/

@@ -46,5 +46,11 @@ Datasets (used only for model training — see training/README.md)
 
 Sheep gate-crossing dataset
   Zenodo record 12094356 — https://zenodo.org/records/12094356
-  Licensed CC BY 4.0. Attribution is required for any model trained on it;
-  record the DOI and citation in models/README.md when a trained best.pt ships.
+  Licensed CC BY 4.0. Attribution is required for any model trained on it.
+  Cite as:
+    Helary, L., Okoye, K. N., Kolodziejczyk, M., Schewe, J., Philip, L.,
+    Nicolas, E., & Lebreton, A. (2024). Drone videos and their annotations of
+    passing sheep (for counting purpose) [Data set]. Zenodo.
+    https://doi.org/10.5281/zenodo.12094356
+  When a model fine-tuned on this dataset ships as models/best.pt, its eval
+  report and training commit are recorded in models/README.md.

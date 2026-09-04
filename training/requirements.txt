@@ -1,0 +1,5 @@
+# Training / evaluation only — not needed to run the app.
+ultralytics==8.4.118
+opencv-python-headless==4.10.0.84
+pyyaml==6.0.3
+numpy>=1.26
