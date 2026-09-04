@@ -70,9 +70,44 @@ instances, so the gate below is effectively a sheep gate.
 | counting error % (net, per clip) | ≤ 5% |
 | ID switches / true animal count | ≤ 1.5× |
 
-Measure the shipped model first to record the baseline. If ID fragmentation dominates the
-error, tune BoT-SORT (`track_buffer`, `match_thresh`, `new_track_thresh`) and/or add a
-min-track-length gate in `counter.py` (config-flagged), then re-run `counting_eval.py`.
+Measure the shipped model first to record the baseline.
+
+### If ID fragmentation dominates the error
+
+The `LineCrossingCounter` already absorbs a lot of it (per-track state + cooldown +
+`crossing_sequence` dedup) — on the ICAERUS clips a ~7× ID-fragmentation ratio still
+lands the count within ~±5%. Levers, in order of payoff:
+
+1. **Fine-tune on the real footage** — the biggest one. Domain gap (resolution, fps,
+   flock density) is what fragments tracks in the first place.
+2. `COUNT_MIN_TRACK_UPDATES` (env, default 3) — a crossing is ignored until the track
+   has that many detections, so a 2-3 frame blob at the line is not counted. A gated
+   crossing re-fires once the track matures.
+3. `COUNT_ENTRY_ZONE="x1,y1,x2,y2"` (env) — only count tracks whose centre was inside
+   this box at some point. Filters edge-of-frame flicker.
+4. `TRACKER=botsort_reid.yaml` — appearance ReID; needs a real ReID model
+   (`model:` → osnet path) to actually help, `model: auto` did not on the test clips.
+5. Tune `track_buffer` / `match_thresh` / `new_track_thresh` in a custom tracker yaml.
+
+`python scripts/count_video.py <clip> --line x1,y1,x2,y2 --inside UP` runs the exact
+pipeline offline for quick before/after checks.
+
+## Adding a species (cattle, goat, horse, camel, …)
+
+Nothing is sheep-specific — class names are read from the model and `animal_type` is a
+free string end to end. To add e.g. camel:
+
+1. `backend/app/vision/classes.py` — add `"camel"` to `CANONICAL` and to `SYNONYMS`
+   (`"camel": "camel", "deve": "camel", "dromedary": "camel"`).
+2. Train with the species in `names:` (`prepare_dataset.py` → `train.py`), using clips
+   that contain it. Camel has no COCO base class, so it needs its own labelled data;
+   cattle/goat/horse can start from the COCO-pretrained `yolov8s.pt` head.
+3. Frontend: add `"camel"` to `ANIMALS` in `pages/Events.tsx`, `camel: t.animalCamel`
+   in `lib/format.ts`, and an `animalCamel` key in all four languages of
+   `i18n/translations.ts`. An unmapped species already falls back to its raw name.
+
+Per the per-site model, each customer's box can carry its own `best.pt` fine-tuned on
+that site's animals — no code change to swap it in unless the class list grew.
 
 ## Swap-in
 

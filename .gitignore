@@ -18,9 +18,10 @@ models/*.ts
 models/*.pth
 !models/best.pt
 /yolo*.pt
-# Videos are not committed — except the one bundled demo clip.
-videos/*.mp4
-videos/*.MP4
+# Videos are not committed (any depth) — except the one bundled demo clip.
+videos/**/*.mp4
+videos/**/*.MP4
+videos/**/*.xlsx
 !videos/crop_23.11.23-12.MP4
 datasets/_downloads/
 datasets/**/images/

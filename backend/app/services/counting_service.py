@@ -75,7 +75,11 @@ class CountingService:
                 # Fresh counting session each pass so a looped recording does not
                 # inflate totals (same animals, same crossing_sequence -> deduped).
                 self.stream = CameraStream(source)
-                self.counter = LineCrossingCounter(p1, p2, inside)
+                self.counter = LineCrossingCounter(
+                    p1, p2, inside,
+                    min_track_updates=self.settings.count_min_track_updates,
+                    entry_zone=self.settings.count_entry_zone_rect,
+                )
                 self.smoother = CenterSmoother()
                 self.detector.reset_tracker()
                 async for frame in self.stream.frames():

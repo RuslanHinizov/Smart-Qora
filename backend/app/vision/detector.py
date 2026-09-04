@@ -1,8 +1,18 @@
 import logging
+from pathlib import Path
 
 from app.vision.classes import canonical
 
 logger = logging.getLogger(__name__)
+
+_TRACKER_DIR = Path(__file__).parent / "trackers"
+
+
+def _resolve_tracker(name: str) -> str:
+    """Prefer a bundled tracker yaml (e.g. botsort_reid.yaml); otherwise pass the
+    name through for Ultralytics to resolve (botsort.yaml / bytetrack.yaml)."""
+    local = _TRACKER_DIR / name
+    return str(local) if local.is_file() else name
 
 
 class LivestockDetector:
@@ -19,7 +29,8 @@ class LivestockDetector:
         if self.device == "cpu" and requested_cuda:
             logger.warning("cuda_unavailable_falling_back_to_cpu")
         self.half_precision = half_precision and self.device != "cpu"
-        self.confidence, self.iou, self.image_size, self.tracker = confidence, iou, image_size, tracker
+        self.confidence, self.iou, self.image_size = confidence, iou, image_size
+        self.tracker = _resolve_tracker(tracker)
         self.names = self.model.names
         wanted = {canonical(name) for name in allowed_classes} - {None}
         self.allowed_ids = None if not wanted else [i for i, name in self.names.items() if canonical(name) in wanted]

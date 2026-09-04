@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     frame_skip: int = 0
     stream_fps: int = 12
     video_loop: bool = True
-    tracker: Literal["botsort.yaml", "bytetrack.yaml"] = "botsort.yaml"
+    tracker: Literal["botsort.yaml", "botsort_reid.yaml", "bytetrack.yaml"] = "botsort.yaml"
     # Defaults point at the bundled demo clip so a fresh clone counts out of the
     # box; override VIDEO_SOURCE + COUNT_LINE_* in .env for a real camera.
     video_source: str = "videos/crop_23.11.23-12.MP4"
@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     count_line_p2_x: int = 1440
     count_line_p2_y: int = 594
     inside_direction: Literal["UP", "DOWN", "LEFT", "RIGHT"] = "DOWN"
+    count_min_track_updates: int = 3      # ignore a crossing until a track has this many hits
+    count_entry_zone: str = ""            # "x1,y1,x2,y2" — only count tracks seen inside it
     allowed_classes: list[str] = ["sheep", "cattle", "goat", "horse"]
     default_language: Literal["ru", "kk", "en", "tr"] = "ru"
     telegram_bot_token: str = ""
@@ -66,11 +68,18 @@ class Settings(BaseSettings):
             raise ValueError("must be a multiple of 32 between 320 and 1920")
         return value
 
-    @field_validator("frame_skip")
+    @field_validator("frame_skip", "count_min_track_updates")
     @classmethod
-    def non_negative_skip(cls, value: int) -> int:
+    def non_negative(cls, value: int) -> int:
         if value < 0:
             raise ValueError("must be >= 0")
+        return value
+
+    @field_validator("count_entry_zone")
+    @classmethod
+    def valid_entry_zone(cls, value: str) -> str:
+        if value and len(value.split(",")) != 4:
+            raise ValueError('COUNT_ENTRY_ZONE must be "x1,y1,x2,y2" or empty')
         return value
 
     @field_validator("stream_fps", "telegram_aggregation_seconds", "access_token_ttl_hours")
@@ -100,6 +109,13 @@ class Settings(BaseSettings):
     @property
     def count_line(self) -> tuple[tuple[int, int], tuple[int, int]]:
         return ((self.count_line_p1_x, self.count_line_p1_y), (self.count_line_p2_x, self.count_line_p2_y))
+
+    @property
+    def count_entry_zone_rect(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        if not self.count_entry_zone:
+            return None
+        x1, y1, x2, y2 = (int(v) for v in self.count_entry_zone.split(","))
+        return ((x1, y1), (x2, y2))
 
 
 @lru_cache

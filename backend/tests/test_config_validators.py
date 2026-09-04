@@ -19,6 +19,8 @@ def test_defaults_are_valid():
     ("img_size", 700),          # not a multiple of 32
     ("img_size", 64),           # below range
     ("frame_skip", -1),
+    ("count_min_track_updates", -1),
+    ("count_entry_zone", "10,20,30"),   # needs 4 values
     ("stream_fps", 0),
     ("telegram_aggregation_seconds", 0),
 ])
