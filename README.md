@@ -2,10 +2,10 @@
 
 AI livestock **gate monitoring** — counts animals in and out of a barn/paddock from a camera feed, in real time.
 
-Camera frames → Ultralytics YOLOE detection → BoT-SORT tracking → line-crossing counter →
-PostgreSQL + incremental rollups → FastAPI + WebSocket → React dashboard, with an annotated
-MJPEG preview and aggregated Telegram alerts. The UI is fully translated into **Русский,
-Қазақша, English, Türkçe**.
+Camera frames → Ultralytics YOLOv8 detection (a sheep-gate fine-tune) → BoT-SORT tracking →
+line-crossing counter → PostgreSQL + incremental rollups → FastAPI + WebSocket → React
+dashboard, with an annotated MJPEG preview and aggregated Telegram alerts. The UI is fully
+translated into **Русский, Қазақша, English, Türkçe**.
 
 > **License:** AGPL-3.0-only. See [Licensing](#licensing).
 

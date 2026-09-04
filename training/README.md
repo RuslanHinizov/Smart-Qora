@@ -1,9 +1,10 @@
 # Model training & counting-accuracy evaluation
 
-The shipped `models/best.pt` (YOLOE-26s) is a general baseline. On top-down gate footage it
-under-detects and confuses sheep ↔ goat ↔ cattle. This directory holds a reproducible
-pipeline to fine-tune a detector on real gate video and prove the improvement in
-**counting** terms, not just mAP.
+`models/best.pt` ships as a YOLOv8s **sheep-gate fine-tune** (this pipeline's output). It
+replaced a general YOLOE-26s baseline that under-detected and confused sheep ↔ goat ↔ cattle
+on top-down gate footage. This directory is the reproducible pipeline that produced it —
+and how you retrain on your own gate video, proving the gain in **counting** terms, not
+just mAP.
 
 ```bash
 pip install -r training/requirements.txt          # + a CUDA torch build for GPU
