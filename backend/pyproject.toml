@@ -20,4 +20,5 @@ select = ["F", "E9"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
+pythonpath = ["."]           # so `import app` works under bare `pytest` (CI), not just `python -m pytest`
 filterwarnings = ["ignore::DeprecationWarning"]
