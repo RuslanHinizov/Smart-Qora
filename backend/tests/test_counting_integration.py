@@ -68,6 +68,7 @@ async def test_video_loop_replays_without_inflating_counts(monkeypatch, clean_db
     FakeCameraStream.instances = 0
     monkeypatch.setattr(cs, "CameraStream", lambda source: FakeCameraStream(source, len(script)))
     monkeypatch.setattr(cs, "LivestockDetector", lambda *a, **k: FakeDetector(script, NAMES))
+    monkeypatch.setattr(get_settings(), "video_loop", True)  # independent of the ambient .env
 
     service = cs.CountingService(get_settings())
     task = asyncio.create_task(service.run())
