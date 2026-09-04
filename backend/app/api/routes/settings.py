@@ -6,6 +6,7 @@ from app.api.deps import get_current_user, require_admin
 from app.api.schemas import HerdCalibrate, SettingsRead, SettingsUpdate
 from app.db.database import get_session
 from app.db.models import AppSettings, HerdState
+from app.telegram.runtime import TELEGRAM_KEYS, apply_telegram_config
 
 router = APIRouter(tags=["settings"])
 
@@ -37,9 +38,13 @@ async def read_settings(session: AsyncSession = Depends(get_session)):
 @router.put("/settings", response_model=SettingsRead, dependencies=[Depends(require_admin)])
 async def update_settings(payload: SettingsUpdate, session: AsyncSession = Depends(get_session)):
     row = await _get_settings_row(session)
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    changed = payload.model_dump(exclude_unset=True)
+    for key, value in changed.items():
         setattr(row, key, value)
     await session.commit()
+    if TELEGRAM_KEYS & changed.keys():
+        # re-apply so a new token / chat id / language takes effect without a restart
+        await apply_telegram_config()
     return await read_settings(session)
 
 

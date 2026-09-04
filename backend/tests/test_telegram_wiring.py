@@ -49,6 +49,22 @@ async def test_notifier_is_noop_without_sender():
     await notifier.add("IN", 3, "Gate")  # must not raise
 
 
+@pytest.mark.asyncio
+async def test_saving_telegram_settings_reconfigures_notifier_without_restart(client, admin_token, auth, clean_db):
+    notifier.configure(0, None, "en")
+    try:
+        # a non-telegram change must not wire a sender
+        await client.put("/api/settings", headers=auth(admin_token), json={"default_confidence": 0.3})
+        assert notifier._aggregator is None
+
+        # setting token + chat id must wire the sender live
+        await client.put("/api/settings", headers=auth(admin_token),
+                         json={"telegram_bot_token": "123:AAA", "telegram_chat_id": "42"})
+        assert notifier._aggregator is not None
+    finally:
+        notifier.configure(0, None, "en")
+
+
 class _FakeMessage:
     def __init__(self):
         self.replies: list[str] = []
