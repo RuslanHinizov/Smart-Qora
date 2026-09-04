@@ -26,6 +26,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--epochs", type=int, help="override config.yaml epochs (for a smoke run)")
     ap.add_argument("--model", help="override the base weights")
+    ap.add_argument("--data", help="override the dataset yaml")
+    ap.add_argument("--name", help="override the run name")
+    ap.add_argument("--batch", type=int, help="override batch size")
+    ap.add_argument("--imgsz", type=int, help="override image size")
+    ap.add_argument("--workers", type=int, help="override dataloader workers")
     ap.add_argument("--device", help="override device, e.g. cpu or 0")
     args = ap.parse_args()
 
@@ -34,6 +39,16 @@ def main() -> int:
         cfg["epochs"] = args.epochs
     if args.model:
         cfg["model"] = args.model
+    if args.data:
+        cfg["data"] = args.data
+    if args.name:
+        cfg["name"] = args.name
+    if args.batch is not None:
+        cfg["batch"] = args.batch
+    if args.imgsz is not None:
+        cfg["imgsz"] = args.imgsz
+    if args.workers is not None:
+        cfg["workers"] = args.workers
     if args.device is not None:
         cfg["device"] = args.device
 

@@ -98,6 +98,19 @@ lands the count within ~±5%. Levers, in order of payoff:
 `python scripts/count_video.py <clip> --line x1,y1,x2,y2 [--line2 …] --inside UP` runs
 the exact pipeline offline for quick before/after checks.
 
+## Note: pseudo-labelling alone does not help
+
+`pseudo_label.py` auto-labels the full ICAERUS set with the current model, mixes in
+the 447 real Zenodo frames, and `train.py --data datasets/smartqora/data.yaml` trains
+on it. Tried this (`smartqora` run): on the clean Zenodo clips it stayed at 0.0%
+counting error, but on the real 30fps clips it did **not** improve — `23.11.23-16`
+went 47 → 49 against a hand-counted truth of 43. The pseudo-labels carry the current
+model's over-detection (split boxes, vegetation), so training on them reinforces it.
+
+To actually move the needle: correct the pseudo-labels in CVAT / Label Studio (they
+are already in `datasets/smartqora/labels/` as a starting point), then retrain on the
+corrected set. That needs real human label time; there is no automatic shortcut.
+
 ## Adding a species (cattle, goat, horse, camel, …)
 
 Nothing is sheep-specific — class names are read from the model and `animal_type` is a

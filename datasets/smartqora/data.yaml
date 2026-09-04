@@ -1,0 +1,9 @@
+path: datasets/smartqora
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: sheep
+  1: cattle
+  2: goat
+  3: horse
