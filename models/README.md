@@ -29,7 +29,7 @@ vision worker stays idle (`/api/status` → `ai: IDLE`).
 - **Recipe:** `training/config.yaml` (freeze 10, imgsz 1024, batch 16, AdamW auto-lr,
   early-stopped at epoch 22 of a 60-epoch budget). Rebuild with
   `python training/prepare_dataset.py && python training/train.py`.
-- **Pipeline commit:** `b1e35e2` (add `training/`); early-stopped at epoch 22.
+- **Pipeline commit:** `7971885` (add `training/`); early-stopped at epoch 22.
 
 ### Acceptance gate — all pass (`training/reports/`)
 
