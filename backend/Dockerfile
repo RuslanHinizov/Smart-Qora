@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 # GPU access comes from the NVIDIA container runtime (compose `deploy.resources.devices`);
 # the CUDA runtime libs ship inside the torch cu124 wheels installed below.
