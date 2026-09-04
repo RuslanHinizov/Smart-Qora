@@ -19,19 +19,23 @@ same-origin and there is no CORS to configure. Remote access is expected to run 
 [Tailscale](#remote-access); the app still requires a login.
 
 ```
-                         ┌──────────── one box per site ────────────┐
-  camera (RTSP/USB/file) │  backend ── vision worker (GPU)          │
-                         │     │       ├─ WorkerSupervisor (restart) │
-                         │     │       ├─ LineCrossingCounter        │
-                         │     │       ├─ FrameBus → /api/stream/*   │
-                         │     │       └─ RunningTotals → daily_stats │
-                         │     ▼                                      │
-                         │  Postgres ◄── Alembic migrations           │
-                         │     ▲                                      │
-                         │  nginx (SPA + /api + /ws proxy) :80        │
-                         └──────────────────────────────────────────┘
-                                        ▲  Tailscale
-                                   browser · Telegram
+                         ┌─────────────── one box per site ───────────────┐
+  camera (RTSP/USB/file) │  backend ── vision worker (GPU)                │
+                         │     │       ├─ WorkerSupervisor (crash/backoff)│
+                         │     │       ├─ LineCrossingCounter             │
+                         │     │       ├─ FrameBus ─► GET /api/stream/*   │
+                         │     │       └─ RunningTotals ─► daily_statistics│
+                         │     │                                          │
+                         │  FastAPI ── JWT auth (admin / viewer)          │
+                         │     │       ├─ REST /api/*                     │
+                         │     │       └─ WebSocket /ws/live (live totals)│
+                         │     ▼                                          │
+                         │  Postgres ◄── Alembic migrations               │
+                         │     ▲                                          │
+                         │  nginx ── serves the SPA + proxies /api & /ws  │
+                         └───────────────────────────────────────────────┘
+                                        ▲  Tailscale (network only)
+                                   browser (login)  ·  Telegram (alerts + bot)
 ```
 
 The line-crossing geometry is an independent reimplementation of the idea in
