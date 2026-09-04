@@ -17,9 +17,11 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/smart_qora
-      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      # Insecure defaults so `docker compose up` works straight after a clone.
+      # For a real site, put strong values in .env (see .env.example).
+      SECRET_KEY: ${SECRET_KEY:-dev-insecure-change-me}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
       # Frontend is served same-origin by the nginx container (it proxies /api + /ws),
       # so CORS is not needed. Set explicit origins only for a split dev-server setup.
       CORS_ORIGINS: ""

@@ -1,22 +1,25 @@
 # Models
 
-Weights are **not** committed to git (`.gitignore`). The backend needs:
+| file | committed? | what it is |
+|---|---|---|
+| `best.pt` | **yes** (~22 MB) | The detection checkpoint the backend loads. A **YOLOv8s fine-tune** on the Zenodo sheep gate-crossing set (details below). Bundled so the repo runs straight after `git clone`. |
+| `best.prev.pt` | no (`.gitignore`) | Previous `best.pt` (YOLOE-26s baseline). Local rollback copy. |
+| `yolov8s.pt` | no | Fine-tune base weights. Ultralytics fetches it automatically when you run `training/`. |
+| `mobileclip2_b.ts` | no | Text encoder for YOLOE open-vocabulary prompting. Not used by the shipped model. |
 
-| file | what it is |
-|---|---|
-| `best.pt` | Ultralytics detection checkpoint. Class names are read from the model — no livestock class is hard-coded. Currently a **YOLOv8s fine-tune** on the Zenodo sheep gate-crossing set (see below); the original YOLOE-26s baseline is kept as `best.prev.pt`. |
-| `best.prev.pt` | Previous `best.pt` (YOLOE-26s baseline). Rollback target. |
-| `mobileclip2_b.ts` | Text encoder used by YOLOE open-vocabulary prompting. Only needed if the detector is switched back to a YOLOE prompt-mode checkpoint; kept for completeness. |
+Class names are read from the model — no livestock class is hard-coded. If `MODEL_PATH`
+points at a missing file the backend still starts, but the vision worker stays idle
+(`/api/status` → `ai: IDLE`).
 
-## Getting the weights
+## Alternative / larger weights
+
+`scripts/fetch_models.sh` (or `scripts\fetch_models.ps1`) pulls extra weights from a
+release if you want to swap them in:
 
 ```bash
-export SMART_QORA_MODELS_URL=https://github.com/<owner>/<repo>/releases/download/models-v1
-./scripts/fetch_models.sh          # or scripts\fetch_models.ps1 on Windows
+export SMART_QORA_MODELS_URL=https://github.com/RuslanHinizov/Smart-Qora/releases/download/models-v1
+./scripts/fetch_models.sh
 ```
-
-If `MODEL_PATH` points at a missing file the backend starts normally but the
-vision worker stays idle (`/api/status` → `ai: IDLE`).
 
 ## Current `best.pt` — YOLOv8s sheep-gate fine-tune
 

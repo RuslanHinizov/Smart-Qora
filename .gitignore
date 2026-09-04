@@ -11,11 +11,17 @@ dist/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+# Weights are not committed — except the bundled demo model, so the repo runs
+# straight after `git clone` (see models/README.md).
 models/*.pt
 models/*.ts
 models/*.pth
+!models/best.pt
+/yolo*.pt
+# Videos are not committed — except the one bundled demo clip.
 videos/*.mp4
 videos/*.MP4
+!videos/crop_23.11.23-12.MP4
 datasets/_downloads/
 datasets/**/images/
 datasets/**/labels/

@@ -10,7 +10,7 @@ def _settings(**overrides):
 
 
 def test_defaults_are_valid():
-    assert _settings().confidence == 0.40
+    assert _settings().confidence == 0.25
 
 
 @pytest.mark.parametrize("field,value", [

@@ -43,27 +43,38 @@ The line-crossing geometry is an independent reimplementation of the idea in
 
 ---
 
-## Deploy a site box
+## Quick start
 
 Requirements: Docker + Compose, an NVIDIA GPU with the
 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
 ```bash
-git clone <repo> && cd smart-qora
-
-cp .env.example .env                 # compose secrets — set POSTGRES_PASSWORD, SECRET_KEY, ADMIN_PASSWORD
-cp backend/.env.example backend/.env # app + seed-camera defaults
-
-export SMART_QORA_MODELS_URL=https://github.com/<owner>/<repo>/releases/download/models-v1
-./scripts/fetch_models.sh            # pulls models/best.pt (gitignored)
-
+git clone https://github.com/RuslanHinizov/Smart-Qora.git && cd Smart-Qora
 docker compose up -d --build
 ```
 
-Open `http://localhost:5173` (or the box's Tailscale name) and sign in with the admin
-credentials from `.env`. `alembic upgrade head` runs automatically on every backend start.
+Open `http://localhost:5173`, sign in `admin` / `admin`. That's it — a fine-tuned
+sheep model (`models/best.pt`) and a demo clip (`videos/crop_23.11.23-12.MP4`) are
+bundled, so the dashboard starts counting on the looping demo video with nothing
+else to download. `alembic upgrade head` runs automatically on every backend start.
+
+*No NVIDIA GPU?* Delete the `deploy:` block in `docker-compose.yml` — it then runs
+on CPU (much slower, but the UI and counting still work).
 
 Health probes: `GET /api/health` (liveness), `GET /api/ready` (503 until DB + worker are up).
+
+## Deploy a real site box
+
+For an actual gate, override the demo defaults:
+
+```bash
+cp .env.example .env                 # set strong POSTGRES_PASSWORD / SECRET_KEY / ADMIN_PASSWORD
+cp backend/.env.example backend/.env # then set VIDEO_SOURCE=rtsp://… + COUNT_LINE_* (or use the Cameras page)
+docker compose up -d --build
+```
+
+Without `.env` the compose file falls back to insecure demo secrets (`admin` / `admin`,
+a fixed `SECRET_KEY`) — fine for a laptop, **not** for anything reachable by others.
 
 ---
 
@@ -162,9 +173,12 @@ image builds on every push and PR.
 
 ## Model training
 
-The shipped YOLOE model is a general baseline and mislabels top-down livestock. A
-reproducible fine-tuning + counting-accuracy pipeline lives in
-[`training/README.md`](training/README.md).
+The bundled `models/best.pt` is a **YOLOv8s fine-tune** on the Zenodo sheep gate-crossing
+set — on those clips it counts 158/158 (the YOLOE baseline it replaced managed 111/158).
+The reproducible fine-tuning + counting-accuracy pipeline, the eval numbers, and how to
+retrain on your own footage are in [`training/README.md`](training/README.md) and
+[`models/README.md`](models/README.md). Only `sheep` is trained; cattle/goat/horse stay at
+the base model's level until you add data for them.
 
 ## Licensing
 

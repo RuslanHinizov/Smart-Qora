@@ -16,18 +16,20 @@ class Settings(BaseSettings):
     device: str = "0"
     require_cuda: bool = False
     half_precision: bool = True
-    confidence: float = 0.40
+    confidence: float = 0.25
     iou: float = 0.70
-    img_size: int = 640
+    img_size: int = 1280
     frame_skip: int = 0
     stream_fps: int = 12
     video_loop: bool = True
     tracker: Literal["botsort.yaml", "bytetrack.yaml"] = "botsort.yaml"
-    video_source: str = "videos/test.mp4"
-    count_line_p1_x: int = 100
-    count_line_p1_y: int = 400
-    count_line_p2_x: int = 1100
-    count_line_p2_y: int = 400
+    # Defaults point at the bundled demo clip so a fresh clone counts out of the
+    # box; override VIDEO_SOURCE + COUNT_LINE_* in .env for a real camera.
+    video_source: str = "videos/crop_23.11.23-12.MP4"
+    count_line_p1_x: int = 0
+    count_line_p1_y: int = 594
+    count_line_p2_x: int = 1440
+    count_line_p2_y: int = 594
     inside_direction: Literal["UP", "DOWN", "LEFT", "RIGHT"] = "DOWN"
     allowed_classes: list[str] = ["sheep", "cattle", "goat", "horse"]
     default_language: Literal["ru", "kk", "en", "tr"] = "ru"
