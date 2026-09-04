@@ -2,13 +2,13 @@ from app.core.config import Settings
 
 
 def test_class_filter_csv_and_camera_source():
-    settings = Settings(ALLOWED_CLASSES="cow,sheep,goat", VIDEO_SOURCE="0")
+    settings = Settings(_env_file=None, allowed_classes="cow,sheep,goat", video_source="0")
     assert settings.allowed_classes == ["cow", "sheep", "goat"]
     assert settings.video_source_value == 0
 
 
 def test_file_camera_source():
-    assert Settings(VIDEO_SOURCE="videos/test.mp4").video_source_value == "videos/test.mp4"
+    assert Settings(_env_file=None, video_source="videos/test.mp4").video_source_value == "videos/test.mp4"
 
 
 def test_csv_and_gpu_flags_from_environment(monkeypatch):
