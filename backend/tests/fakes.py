@@ -61,6 +61,7 @@ class FakeCameraStream:
         FakeCameraStream.instances += 1
         self.source = source
         self.status = "ONLINE"
+        self.fps = 30.0
         self._frame_count = frame_count
 
     async def frames(self):

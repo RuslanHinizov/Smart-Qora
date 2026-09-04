@@ -92,6 +92,10 @@ class CountingService:
                     self.last_frame_at = time.time()
                     if frame_number % (frame_skip + 1):
                         continue
+                    # video-time clock, not wall-clock: the counter's cooldown /
+                    # TTL are in "seconds of footage", and a file may be processed
+                    # faster or slower than real time.
+                    now_v = frame_number / (self.stream.fps or 30.0)
                     result = await asyncio.to_thread(self.detector.track, frame)
                     if result.boxes is not None:
                         for box in result.boxes:
@@ -100,12 +104,12 @@ class CountingService:
                             track_id = int(box.id.item())
                             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                             center = self.smoother.update(track_id, ((x1 + x2) // 2, (y1 + y2) // 2))
-                            crossing = self.counter.update(track_id, center)
+                            crossing = self.counter.update(track_id, center, now=now_v)
                             if crossing:
                                 raw = result.names[int(box.cls.item())]
                                 await self._save_event(
                                     track_id, canonical(raw) or raw, crossing, float(box.conf.item()))
-                        self.counter.prune()
+                        self.counter.prune(now=now_v)
                     now = time.time()
                     if frame_bus.has_subscribers and now - last_publish >= 1.0 / stream_fps:
                         last_publish = now

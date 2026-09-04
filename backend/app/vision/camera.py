@@ -13,6 +13,7 @@ class CameraStream:
         self.source = source
         self.max_backoff = max_backoff
         self.status = "OFFLINE"
+        self.fps = 30.0
         self._capture = None
         self._closed = False
 
@@ -29,6 +30,9 @@ class CameraStream:
                     await asyncio.sleep(backoff)
                     backoff = min(backoff * 2, self.max_backoff)
                     continue
+                getter = getattr(self._capture, "get", None)
+                reported = getter(cv2.CAP_PROP_FPS) if getter else 0.0
+                self.fps = reported if 1.0 <= reported <= 120.0 else 30.0
                 self.status, backoff = "ONLINE", 1.0
                 logger.info("camera_connected")
             ok, frame = await asyncio.to_thread(self._capture.read)
