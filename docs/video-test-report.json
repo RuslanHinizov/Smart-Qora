@@ -1,0 +1,61 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "imgsz": 1280,
+  "confidence": 0.05,
+  "half_precision": true,
+  "max_vram_mb": 582.0,
+  "videos": [
+    {
+      "video": "crop_23.11.23-10.MP4",
+      "resolution": "1440x1080",
+      "fps": 9.0,
+      "frames": 297,
+      "seconds": 12.65,
+      "processing_fps": 23.5,
+      "unique_tracks": 0,
+      "observations": {},
+      "crossing_count": 0,
+      "events": []
+    },
+    {
+      "video": "crop_23.11.23-12.MP4",
+      "resolution": "1440x1080",
+      "fps": 9.0,
+      "frames": 99,
+      "seconds": 3.05,
+      "processing_fps": 32.5,
+      "unique_tracks": 0,
+      "observations": {},
+      "crossing_count": 0,
+      "events": []
+    },
+    {
+      "video": "crop_23.11.23-13.MP4",
+      "resolution": "1440x1080",
+      "fps": 9.0,
+      "frames": 117,
+      "seconds": 4.92,
+      "processing_fps": 23.8,
+      "unique_tracks": 1,
+      "observations": {
+        "Sheep": 12
+      },
+      "crossing_count": 0,
+      "events": []
+    },
+    {
+      "video": "crop_23.11.23-8.MP4",
+      "resolution": "1440x1080",
+      "fps": 9.0,
+      "frames": 126,
+      "seconds": 3.91,
+      "processing_fps": 32.2,
+      "unique_tracks": 0,
+      "observations": {},
+      "crossing_count": 0,
+      "events": []
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: smart_qora
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U postgres -d smart_qora"], interval: 5s, timeout: 5s, retries: 10}
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports: ["8000:8000"]
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/smart_qora
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      # Frontend is served same-origin by the nginx container (it proxies /api + /ws),
+      # so CORS is not needed. Set explicit origins only for a split dev-server setup.
+      CORS_ORIGINS: ""
+      NVIDIA_VISIBLE_DEVICES: all
+      WEB_CONCURRENCY: "1"
+    volumes: ["./models:/app/models", "./videos:/app/videos"]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - {driver: nvidia, count: 1, capabilities: [gpu]}
+
+  frontend:
+    build: ./frontend
+    ports: ["5173:80"]
+    depends_on: [backend]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

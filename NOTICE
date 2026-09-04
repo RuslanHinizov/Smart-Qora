@@ -1,0 +1,50 @@
+Smart Qora — AI livestock gate monitoring
+Copyright (C) 2026 Smart Qora contributors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License, version 3, as published by
+the Free Software Foundation. See the LICENSE file for the full text.
+
+Because Smart Qora is served over a network, the AGPL's Section 13 applies: any
+operator who runs a modified version must offer its complete source code to the
+users interacting with it. This repository is that offer.
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+Ultralytics (YOLO / YOLOE, BoT-SORT, ByteTrack)
+  https://github.com/ultralytics/ultralytics
+  Licensed under AGPL-3.0. Smart Qora links Ultralytics at runtime for detection
+  and tracking; keeping this project under AGPL-3.0 satisfies that license.
+
+Line-crossing counter approach
+  Adapted from the "YOLO11 line crossing counter" example by NitinCVOrbit
+  (https://github.com/NitinCVOrbit). The counting geometry in
+  backend/app/vision/counter.py is an independent reimplementation.
+
+OpenCV (opencv-python-headless)
+  https://opencv.org — Apache-2.0.
+
+PyTorch / TorchVision
+  https://pytorch.org — BSD-3-Clause.
+
+FastAPI, Starlette, SQLAlchemy, Alembic, Pydantic, python-telegram-bot,
+asgi-correlation-id, PyJWT, argon2-cffi
+  Respective permissive licenses (MIT / BSD / Apache-2.0 / PSF); see each
+  project for details.
+
+React, React Router, TanStack Query, Recharts, Vite
+  MIT.
+
+Manrope typeface (bundled via @fontsource/manrope)
+  https://github.com/sharanda-notdef/Manrope — SIL Open Font License 1.1.
+
+--------------------------------------------------------------------------------
+Datasets (used only for model training — see training/README.md)
+--------------------------------------------------------------------------------
+
+Sheep gate-crossing dataset
+  Zenodo record 12094356 — https://zenodo.org/records/12094356
+  Licensed CC BY 4.0. Attribution is required for any model trained on it;
+  record the DOI and citation in models/README.md when a trained best.pt ships.

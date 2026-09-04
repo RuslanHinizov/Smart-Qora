@@ -1,0 +1,71 @@
+:root {
+  /* palette — light blue / white */
+  --c-bg: #f4f8ff;
+  --c-bg-glow: rgba(93, 176, 255, 0.16);
+  --c-surface: #ffffff;
+  --c-surface-2: #f6f9ff;
+  --c-border: #e2eaf6;
+  --c-border-strong: #cddcf3;
+  --c-text: #14243f;
+  --c-text-soft: #465b7c;
+  --c-text-muted: #5f7291;
+  --c-primary: #1967f2;
+  --c-primary-dark: #0f4fc4;
+  --c-primary-soft: #e8f1ff;
+  --c-cyan: #0e9fc4;
+  --c-cyan-soft: #e0f7fb;
+  --c-indigo: #5a64e8;
+  --c-indigo-soft: #eceeff;
+  --c-violet: #8b5cf6;
+  --c-violet-soft: #f1ebff;
+  --c-ok: #17a673;
+  --c-ok-soft: #e6f8f1;
+  --c-warn: #d98b00;
+  --c-warn-soft: #fdf1dd;
+  --c-danger: #dc3b52;
+  --c-danger-soft: #fdecef;
+
+  /* dark surfaces (camera stage) + accents */
+  --c-dark: #0d1e36;
+  --c-dark-text: #9fb6d6;
+  --c-live: #ff5c73;
+  --c-brand-grad-a: #2a86ff;
+  --c-brand-grad-b: #1049cf;
+  --c-scrim: rgba(15, 32, 60, 0.4);
+  --c-badge-scrim: rgba(4, 17, 36, 0.6);
+  --c-white: #ffffff;
+
+  /* spacing scale (4px) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* type scale — min body 13, min meta 11 */
+  --fs-1: 11px;
+  --fs-2: 13px;
+  --fs-3: 14px;
+  --fs-4: 16px;
+  --fs-5: 20px;
+  --fs-6: 26px;
+  --fs-7: 34px;
+
+  --shadow-sm: 0 2px 8px rgba(40, 74, 130, 0.06);
+  --shadow-md: 0 12px 32px rgba(40, 74, 130, 0.1);
+  --shadow-brand: 0 8px 18px rgba(25, 103, 242, 0.28);
+  --focus-ring: 0 0 0 3px var(--c-primary-soft);
+
+  --font:
+    "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+}

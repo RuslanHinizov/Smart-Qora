@@ -1,0 +1,994 @@
+{
+  "model": "YOLOE-26s livestock prompts",
+  "confidence": 0.15,
+  "imgsz": 1280,
+  "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "results": [
+    {
+      "video": "crop_23.11.23-10.MP4",
+      "frames": 297,
+      "seconds": 19.9,
+      "processing_fps": 14.9,
+      "unique_tracks": 101,
+      "observations": {
+        "sheep": 3984,
+        "cow": 383,
+        "goat": 66
+      },
+      "crossings": 34,
+      "events": [
+        {
+          "frame": 5,
+          "id": 4,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.51
+        },
+        {
+          "frame": 14,
+          "id": 7,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.385
+        },
+        {
+          "frame": 18,
+          "id": 5,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.434
+        },
+        {
+          "frame": 23,
+          "id": 3,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.619
+        },
+        {
+          "frame": 40,
+          "id": 6,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.419
+        },
+        {
+          "frame": 41,
+          "id": 1,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.607
+        },
+        {
+          "frame": 50,
+          "id": 72,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.307
+        },
+        {
+          "frame": 52,
+          "id": 133,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.285
+        },
+        {
+          "frame": 66,
+          "id": 86,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.508
+        },
+        {
+          "frame": 69,
+          "id": 9,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.582
+        },
+        {
+          "frame": 71,
+          "id": 84,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.639
+        },
+        {
+          "frame": 80,
+          "id": 88,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.813
+        },
+        {
+          "frame": 81,
+          "id": 89,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.696
+        },
+        {
+          "frame": 86,
+          "id": 57,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.746
+        },
+        {
+          "frame": 100,
+          "id": 96,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.555
+        },
+        {
+          "frame": 104,
+          "id": 122,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.696
+        },
+        {
+          "frame": 135,
+          "id": 173,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.728
+        },
+        {
+          "frame": 136,
+          "id": 244,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.85
+        },
+        {
+          "frame": 147,
+          "id": 194,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.785
+        },
+        {
+          "frame": 147,
+          "id": 327,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.876
+        },
+        {
+          "frame": 153,
+          "id": 124,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.764
+        },
+        {
+          "frame": 160,
+          "id": 200,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.808
+        },
+        {
+          "frame": 163,
+          "id": 322,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.791
+        },
+        {
+          "frame": 200,
+          "id": 311,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.558
+        },
+        {
+          "frame": 240,
+          "id": 328,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.835
+        },
+        {
+          "frame": 251,
+          "id": 382,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.523
+        },
+        {
+          "frame": 258,
+          "id": 486,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.419
+        },
+        {
+          "frame": 263,
+          "id": 115,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.533
+        },
+        {
+          "frame": 263,
+          "id": 598,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.604
+        },
+        {
+          "frame": 265,
+          "id": 612,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.604
+        },
+        {
+          "frame": 270,
+          "id": 74,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.484
+        },
+        {
+          "frame": 271,
+          "id": 558,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.676
+        },
+        {
+          "frame": 272,
+          "id": 549,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.442
+        },
+        {
+          "frame": 274,
+          "id": 613,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.676
+        }
+      ]
+    },
+    {
+      "video": "crop_23.11.23-12.MP4",
+      "frames": 99,
+      "seconds": 5.79,
+      "processing_fps": 17.1,
+      "unique_tracks": 56,
+      "observations": {
+        "sheep": 678,
+        "cow": 3,
+        "goat": 9
+      },
+      "crossings": 16,
+      "events": [
+        {
+          "frame": 27,
+          "id": 11,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.477
+        },
+        {
+          "frame": 29,
+          "id": 35,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.535
+        },
+        {
+          "frame": 45,
+          "id": 69,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.494
+        },
+        {
+          "frame": 54,
+          "id": 74,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.44
+        },
+        {
+          "frame": 62,
+          "id": 64,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.316
+        },
+        {
+          "frame": 64,
+          "id": 36,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.44
+        },
+        {
+          "frame": 65,
+          "id": 113,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.264
+        },
+        {
+          "frame": 66,
+          "id": 79,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.302
+        },
+        {
+          "frame": 71,
+          "id": 82,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.352
+        },
+        {
+          "frame": 76,
+          "id": 177,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.367
+        },
+        {
+          "frame": 76,
+          "id": 203,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.188
+        },
+        {
+          "frame": 78,
+          "id": 148,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.484
+        },
+        {
+          "frame": 84,
+          "id": 183,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.288
+        },
+        {
+          "frame": 91,
+          "id": 227,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.185
+        },
+        {
+          "frame": 93,
+          "id": 233,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.455
+        },
+        {
+          "frame": 98,
+          "id": 201,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.209
+        }
+      ]
+    },
+    {
+      "video": "crop_23.11.23-13.MP4",
+      "frames": 117,
+      "seconds": 7.59,
+      "processing_fps": 15.4,
+      "unique_tracks": 122,
+      "observations": {
+        "sheep": 3070,
+        "cow": 284,
+        "horse": 5,
+        "goat": 97
+      },
+      "crossings": 50,
+      "events": [
+        {
+          "frame": 7,
+          "id": 1,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.562
+        },
+        {
+          "frame": 9,
+          "id": 21,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.728
+        },
+        {
+          "frame": 20,
+          "id": 17,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.788
+        },
+        {
+          "frame": 22,
+          "id": 15,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.703
+        },
+        {
+          "frame": 32,
+          "id": 3,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.752
+        },
+        {
+          "frame": 34,
+          "id": 8,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.848
+        },
+        {
+          "frame": 37,
+          "id": 7,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.777
+        },
+        {
+          "frame": 37,
+          "id": 11,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.829
+        },
+        {
+          "frame": 38,
+          "id": 183,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.623
+        },
+        {
+          "frame": 44,
+          "id": 6,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.82
+        },
+        {
+          "frame": 44,
+          "id": 14,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.796
+        },
+        {
+          "frame": 46,
+          "id": 164,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.749
+        },
+        {
+          "frame": 47,
+          "id": 297,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.593
+        },
+        {
+          "frame": 47,
+          "id": 2,
+          "class": "cow",
+          "direction": "IN",
+          "confidence": 0.179
+        },
+        {
+          "frame": 53,
+          "id": 5,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.463
+        },
+        {
+          "frame": 53,
+          "id": 132,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.496
+        },
+        {
+          "frame": 59,
+          "id": 107,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.817
+        },
+        {
+          "frame": 60,
+          "id": 459,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.417
+        },
+        {
+          "frame": 61,
+          "id": 43,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.764
+        },
+        {
+          "frame": 62,
+          "id": 70,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.788
+        },
+        {
+          "frame": 64,
+          "id": 119,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.699
+        },
+        {
+          "frame": 68,
+          "id": 197,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.578
+        },
+        {
+          "frame": 70,
+          "id": 10,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.837
+        },
+        {
+          "frame": 71,
+          "id": 220,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.329
+        },
+        {
+          "frame": 71,
+          "id": 171,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.619
+        },
+        {
+          "frame": 73,
+          "id": 29,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.746
+        },
+        {
+          "frame": 76,
+          "id": 506,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.633
+        },
+        {
+          "frame": 79,
+          "id": 548,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.728
+        },
+        {
+          "frame": 79,
+          "id": 539,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.709
+        },
+        {
+          "frame": 80,
+          "id": 438,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.604
+        },
+        {
+          "frame": 81,
+          "id": 99,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.791
+        },
+        {
+          "frame": 81,
+          "id": 642,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.633
+        },
+        {
+          "frame": 84,
+          "id": 159,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.731
+        },
+        {
+          "frame": 87,
+          "id": 532,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.715
+        },
+        {
+          "frame": 90,
+          "id": 192,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.852
+        },
+        {
+          "frame": 91,
+          "id": 672,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.785
+        },
+        {
+          "frame": 92,
+          "id": 279,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.471
+        },
+        {
+          "frame": 93,
+          "id": 74,
+          "class": "cow",
+          "direction": "IN",
+          "confidence": 0.516
+        },
+        {
+          "frame": 93,
+          "id": 728,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.822
+        },
+        {
+          "frame": 95,
+          "id": 244,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.531
+        },
+        {
+          "frame": 97,
+          "id": 9,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.531
+        },
+        {
+          "frame": 97,
+          "id": 721,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.582
+        },
+        {
+          "frame": 99,
+          "id": 521,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.719
+        },
+        {
+          "frame": 105,
+          "id": 41,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.777
+        },
+        {
+          "frame": 106,
+          "id": 383,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.411
+        },
+        {
+          "frame": 110,
+          "id": 517,
+          "class": "cow",
+          "direction": "IN",
+          "confidence": 0.345
+        },
+        {
+          "frame": 110,
+          "id": 912,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.703
+        },
+        {
+          "frame": 113,
+          "id": 562,
+          "class": "cow",
+          "direction": "IN",
+          "confidence": 0.283
+        },
+        {
+          "frame": 113,
+          "id": 791,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.625
+        },
+        {
+          "frame": 113,
+          "id": 645,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.525
+        }
+      ]
+    },
+    {
+      "video": "crop_23.11.23-8.MP4",
+      "frames": 126,
+      "seconds": 7.37,
+      "processing_fps": 17.1,
+      "unique_tracks": 89,
+      "observations": {
+        "sheep": 2353,
+        "cow": 178,
+        "goat": 10,
+        "horse": 11
+      },
+      "crossings": 32,
+      "events": [
+        {
+          "frame": 9,
+          "id": 15,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.518
+        },
+        {
+          "frame": 10,
+          "id": 47,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.623
+        },
+        {
+          "frame": 13,
+          "id": 87,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.725
+        },
+        {
+          "frame": 16,
+          "id": 56,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.74
+        },
+        {
+          "frame": 19,
+          "id": 50,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.306
+        },
+        {
+          "frame": 21,
+          "id": 8,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.709
+        },
+        {
+          "frame": 21,
+          "id": 156,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.593
+        },
+        {
+          "frame": 28,
+          "id": 187,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.676
+        },
+        {
+          "frame": 29,
+          "id": 194,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.48
+        },
+        {
+          "frame": 33,
+          "id": 227,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.168
+        },
+        {
+          "frame": 34,
+          "id": 74,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.791
+        },
+        {
+          "frame": 39,
+          "id": 118,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.496
+        },
+        {
+          "frame": 44,
+          "id": 13,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.585
+        },
+        {
+          "frame": 46,
+          "id": 23,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.758
+        },
+        {
+          "frame": 47,
+          "id": 112,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.619
+        },
+        {
+          "frame": 51,
+          "id": 20,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.488
+        },
+        {
+          "frame": 55,
+          "id": 329,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.471
+        },
+        {
+          "frame": 58,
+          "id": 196,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.212
+        },
+        {
+          "frame": 59,
+          "id": 90,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.453
+        },
+        {
+          "frame": 64,
+          "id": 25,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.587
+        },
+        {
+          "frame": 69,
+          "id": 414,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.578
+        },
+        {
+          "frame": 73,
+          "id": 301,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.722
+        },
+        {
+          "frame": 75,
+          "id": 343,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.311
+        },
+        {
+          "frame": 81,
+          "id": 512,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.582
+        },
+        {
+          "frame": 82,
+          "id": 133,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.342
+        },
+        {
+          "frame": 82,
+          "id": 506,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.377
+        },
+        {
+          "frame": 83,
+          "id": 513,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.212
+        },
+        {
+          "frame": 92,
+          "id": 540,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.359
+        },
+        {
+          "frame": 100,
+          "id": 584,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.275
+        },
+        {
+          "frame": 101,
+          "id": 551,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.37
+        },
+        {
+          "frame": 110,
+          "id": 539,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.402
+        },
+        {
+          "frame": 115,
+          "id": 452,
+          "class": "sheep",
+          "direction": "IN",
+          "confidence": 0.307
+        }
+      ]
+    }
+  ]
+}

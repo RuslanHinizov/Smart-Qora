@@ -1,0 +1,5 @@
+# CUDA build of PyTorch, installed in the GPU image BEFORE requirements.txt so
+# ultralytics does not pull the CPU wheel from PyPI.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.5.1
+torchvision==0.20.1
