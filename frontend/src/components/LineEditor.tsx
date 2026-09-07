@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { readToken } from "../api/client";
 import { useLanguage } from "../i18n/useLanguage";
 
 export type LinePoints = {
@@ -44,8 +43,7 @@ export function LineEditor({
   const [nextIdx, setNextIdx] = useState(0);
   const dragging = useRef<number | null>(null);
 
-  const token = readToken();
-  const snapshotSrc = token ? `/api/stream/snapshot?token=${encodeURIComponent(token)}` : "";
+  const snapshotSrc = "/api/stream/snapshot";
 
   const num = (f: Field) => (value[f] ?? null) as number | null;
 

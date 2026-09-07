@@ -9,3 +9,7 @@ class CenterSmoother:
         values = self.history[tracking_id]
         values.append(center)
         return (round(sum(x for x, _ in values) / len(values)), round(sum(y for _, y in values) / len(values)))
+
+    def prune(self, active_ids):
+        for tracking_id in self.history.keys() - active_ids.keys():
+            del self.history[tracking_id]

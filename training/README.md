@@ -59,7 +59,7 @@ instances, so the gate below is effectively a sheep gate.
 | `extract_frames.py` | thin a *new* site recording to a labelling-friendly frame rate, optionally pre-label with a model, into `datasets/_staging/<name>` |
 | `train.py` | thin `YOLO(cfg.model).train(...)` wrapper driven by `config.yaml` (imgsz 1280, freeze 10, low LR, mosaic + close_mosaic, `device: 0`, `half: True`) → `runs/sheep-gate*/weights/best.pt` |
 | `eval.py` | `model.val(split="test")` → per-class mAP50 / mAP50-95 / P / R → `reports/detection_<ts>.json`, exits non-zero if the mAP gate is missed |
-| `counting_eval.py` | replays labelled clips through the **real** `LineCrossingCounter` + `CenterSmoother` from `backend/app/vision/`, compares emitted IN/OUT against `ground_truth/*.json` → `counting_error_pct`, per-direction MAE, ID-switch ratio; `--baseline` scores a second model alongside |
+| `counting_eval.py` | replays labelled clips through the production counter settings, compares emitted IN/OUT against `ground_truth/*.json` → per-clip/direction absolute error, MAE and detected-track / labelled-track ratio; `--baseline` scores a second model alongside |
 
 ## Acceptance gate (before swapping `best.pt`)
 
@@ -68,15 +68,15 @@ instances, so the gate below is effectively a sheep gate.
 | mAP50 (sheep) | ≥ 0.90 |
 | mAP50-95 (all) | ≥ 0.60 |
 | counting error % (net, per clip) | ≤ 5% |
-| ID switches / true animal count | ≤ 1.5× |
+| detected tracks / labelled tracks | ≤ 1.5× |
 
 Measure the shipped model first to record the baseline.
 
-### If ID fragmentation dominates the error
+### If track fragmentation dominates the error
 
-The `LineCrossingCounter` already absorbs a lot of it (per-track state + cooldown +
-`crossing_sequence` dedup) — on the ICAERUS clips a ~7× ID-fragmentation ratio still
-lands the count within ~±5%. Levers, in order of payoff:
+The `LineCrossingCounter` absorbs some fragmentation with per-track state and cooldown,
+but the track-count ratio is only a proxy. It does not measure true identity switches.
+Use hand-labelled, unseen site clips to diagnose the remaining errors. Levers, in order of payoff:
 
 1. **Fine-tune on the real footage** — the biggest one. Domain gap (resolution, fps,
    flock density) is what fragments tracks in the first place.

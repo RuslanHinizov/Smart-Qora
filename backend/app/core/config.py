@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     )
 
     app_env: str = "development"
+    tz: str = "Asia/Almaty"
     database_url: str = "postgresql+asyncpg://postgres:postgres@db:5432/smart_qora"
     model_path: str = "models/best.pt"
     device: str = "0"
@@ -45,6 +47,7 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "admin"
     access_token_ttl_hours: int = 12
+    cookie_secure: bool = False
     default_camera_name: str = "Gate 01"
     default_camera_source: str = ""
 
@@ -79,8 +82,23 @@ class Settings(BaseSettings):
     @field_validator("count_entry_zone", "count_line2")
     @classmethod
     def valid_coord_quad(cls, value: str) -> str:
-        if value and len(value.split(",")) != 4:
-            raise ValueError('must be "x1,y1,x2,y2" or empty')
+        if value:
+            parts = value.split(",")
+            if len(parts) != 4:
+                raise ValueError('must be "x1,y1,x2,y2" or empty')
+            try:
+                tuple(int(part) for part in parts)
+            except ValueError:
+                raise ValueError("coordinates must be integers") from None
+        return value
+
+    @field_validator("tz")
+    @classmethod
+    def valid_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError:
+            raise ValueError("TZ must be an IANA timezone such as Asia/Almaty") from None
         return value
 
     @field_validator("stream_fps", "telegram_aggregation_seconds", "access_token_ttl_hours")
@@ -99,8 +117,17 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def line_endpoints_differ(self):
-        if (self.count_line_p1_x, self.count_line_p1_y) == (self.count_line_p2_x, self.count_line_p2_y):
-            raise ValueError("counting line endpoints must differ")
+        from app.vision.counter import LineCrossingCounter
+        entry = self.count_entry_zone_rect
+        if entry and (entry[0][0] == entry[1][0] or entry[0][1] == entry[1][1]):
+            raise ValueError("COUNT_ENTRY_ZONE must have positive width and height")
+        LineCrossingCounter(*self.count_line, self.inside_direction, entry_zone=entry,
+                            line2=self.count_line2_pts)
+        if self.app_env.lower() == "production":
+            if len(self.secret_key) < 32 or self.secret_key in {"change-me-in-production", "dev-insecure-change-me"}:
+                raise ValueError("production SECRET_KEY must be a unique value of at least 32 characters")
+            if not self.admin_password or self.admin_password in {"admin", "change-me"}:
+                raise ValueError("production ADMIN_PASSWORD must not use a demo value")
         return self
 
     @property

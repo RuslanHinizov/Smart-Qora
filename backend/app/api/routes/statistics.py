@@ -10,6 +10,7 @@ from app.api.schemas import HistoryRow, StatisticsRead
 from app.db.database import get_session
 from app.db.models import DailyStatistic
 from app.services.statistics_service import statistics, today_totals
+from app.core.calendar import site_day
 
 router = APIRouter(prefix="/statistics", tags=["statistics"], dependencies=[Depends(get_current_user)])
 
@@ -20,7 +21,7 @@ async def today(session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/daily", response_model=StatisticsRead)
-async def daily(day: date = Query(default_factory=date.today), session: AsyncSession = Depends(get_session)):
+async def daily(day: date = Query(default_factory=site_day), session: AsyncSession = Depends(get_session)):
     return await statistics(session, day)
 
 
@@ -35,7 +36,7 @@ def _period_start(day: date, group: str) -> date:
 @router.get("/history", response_model=list[HistoryRow])
 async def history(
     from_: date = Query(alias="from"),
-    to: date = Query(default_factory=date.today),
+    to: date = Query(default_factory=site_day),
     group: Literal["day", "week", "month"] = "day",
     session: AsyncSession = Depends(get_session),
 ):

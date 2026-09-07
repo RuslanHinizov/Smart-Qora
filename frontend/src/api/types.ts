@@ -54,8 +54,8 @@ export type Camera = {
   inside_direction: InsideDirection | null;
   confidence: number | null;
   iou: number | null;
-  frame_skip: number;
-  stream_fps: number;
+  frame_skip: number | null;
+  stream_fps: number | null;
   created_at: string;
 };
 

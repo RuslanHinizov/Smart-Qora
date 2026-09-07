@@ -1,14 +1,13 @@
 """Authentication dependencies."""
 import jwt
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import decode_token
+from app.core.security import SESSION_COOKIE, decode_token
 from app.db.database import get_session
 from app.db.models import Role, User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=True)
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 _CREDENTIALS_ERROR = HTTPException(
@@ -31,9 +30,14 @@ async def user_from_token(token: str, session: AsyncSession) -> User:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
+    request: Request,
+    token: str | None = Depends(oauth2_scheme_optional),
+    session: AsyncSession = Depends(get_session),
 ) -> User:
-    return await user_from_token(token, session)
+    raw = token or request.cookies.get(SESSION_COOKIE)
+    if not raw:
+        raise _CREDENTIALS_ERROR
+    return await user_from_token(raw, session)
 
 
 async def require_admin(user: User = Depends(get_current_user)) -> User:
@@ -43,12 +47,12 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
 
 
 async def get_current_user_header_or_query(
+    request: Request,
     header_token: str | None = Depends(oauth2_scheme_optional),
-    token: str | None = Query(default=None),
     session: AsyncSession = Depends(get_session),
 ) -> User:
-    """Auth for media endpoints hit by <img>/<video>, which cannot send headers."""
-    raw = header_token or token
+    """Auth for media endpoints hit by <img>/<video>, using an HttpOnly cookie."""
+    raw = header_token or request.cookies.get(SESSION_COOKIE)
     if not raw:
         raise _CREDENTIALS_ERROR
     return await user_from_token(raw, session)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,7 +38,7 @@ async def read_settings(session: AsyncSession = Depends(get_session)):
 
 
 @router.put("/settings", response_model=SettingsRead, dependencies=[Depends(require_admin)])
-async def update_settings(payload: SettingsUpdate, session: AsyncSession = Depends(get_session)):
+async def update_settings(payload: SettingsUpdate, request: Request, session: AsyncSession = Depends(get_session)):
     row = await _get_settings_row(session)
     changed = payload.model_dump(exclude_unset=True)
     for key, value in changed.items():
@@ -47,11 +47,18 @@ async def update_settings(payload: SettingsUpdate, session: AsyncSession = Depen
     if TELEGRAM_KEYS & changed.keys():
         # re-apply so a new token / chat id / language takes effect without a restart
         await apply_telegram_config()
+    if {"default_confidence", "default_iou", "default_frame_skip", "stream_fps"} & changed.keys():
+        supervisor = getattr(request.app.state, "supervisor", None)
+        if supervisor:
+            supervisor.request_restart()
     return await read_settings(session)
 
 
 @router.post("/herd/calibrate", dependencies=[Depends(require_admin)])
-async def calibrate_herd(payload: HerdCalibrate, session: AsyncSession = Depends(get_session)):
+async def calibrate_herd(payload: HerdCalibrate, request: Request, session: AsyncSession = Depends(get_session)):
     await session.execute(update(HerdState).where(HerdState.id == 1).values(current_inside=payload.current_inside))
     await session.commit()
+    from app.main import _initial_state
+    from app.services.websocket_manager import websockets
+    await websockets.broadcast(await _initial_state(request.app))
     return {"current_inside": payload.current_inside}

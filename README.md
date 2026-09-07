@@ -93,14 +93,20 @@ they are git-ignored and never returned by the API.
 | `CONFIDENCE` / `IOU` / `IMG_SIZE` / `FRAME_SKIP` / `TRACKER` | inference tuning; `IMG_SIZE` must be a multiple of 32 |
 | `ALLOWED_CLASSES` | `sheep,cattle,goat,horse`; names are matched case-insensitively via synonyms (`cow` ↔ `cattle`). Empty = every class in the model |
 | `VIDEO_SOURCE` + `COUNT_LINE_*` + `INSIDE_DIRECTION` | **seed only** — used once to create the first camera; edit later in the UI |
-| `VIDEO_LOOP` | replay a video-*file* source forever so the live preview keeps running (ignored for RTSP/webcam) |
-| `SECRET_KEY` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ACCESS_TOKEN_TTL_HOURS` | JWT auth; the admin is seeded on first boot only |
+| `VIDEO_LOOP` | replay a video-file source forever for preview; each file's contents are counted once per camera and completion survives restarts |
+| `APP_ENV` / `SECRET_KEY` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Production mode rejects demo secrets; the admin is seeded on first boot only |
+| `ACCESS_TOKEN_TTL_HOURS` / `COOKIE_SECURE` | JWT lifetime; use `COOKIE_SECURE=true` only when the dashboard is reached through HTTPS |
 
-**2. The Settings and Cameras pages — runtime, no restart.** Default language, Telegram
+**2. The Settings and Cameras pages — runtime.** Default language, Telegram
 token/chat, detection defaults, and per-camera source + counting line + inside-direction +
-thresholds. Editing the active camera automatically restarts the vision worker. Point a
+thresholds. New cameras start inactive. This box counts one active camera at a time; activating another camera switches
+the worker to it. Camera and detection-setting changes restart the worker automatically. Point a
 camera's `source` at `rtsp://user:pass@host/stream` for a real feed; credentials are masked
 (`rtsp://user:***@host`) in every API response.
+
+The API accepts bearer JWTs. Browser media and WebSocket requests use the same token in an
+HttpOnly, SameSite cookie, so credentials never appear in stream URLs or access logs. Logging
+out removes that cookie.
 
 ### Counting line
 
@@ -114,6 +120,9 @@ Create a bot with [@BotFather](https://t.me/BotFather), then on the **Settings**
 the token and one or more **chat ids** (comma-separated — these are the *only* chats the bot
 talks to). Changes apply immediately, no restart. Send `/start` to the bot from a listed
 chat to get going.
+
+Treat the bot token as a password. If it appears in a chat, screenshot, terminal or log,
+revoke it with BotFather and save the replacement in Settings.
 
 | what | detail |
 |---|---|

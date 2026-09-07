@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { readToken } from "./client";
 import { keys } from "./queries";
-import type { EventRow, LiveMessage, Totals } from "./types";
+import type { LiveMessage, Totals } from "./types";
 
 type SocketStatus = "connecting" | "open" | "closed";
 
@@ -21,7 +21,17 @@ export function useLiveSocket() {
   useEffect(() => {
     let socket: WebSocket | null = null;
     let reconnectTimer: number | undefined;
+    let refreshTimer: number | undefined;
     let disposed = false;
+
+    const refreshLists = () => {
+      if (refreshTimer !== undefined) return;
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = undefined;
+        void qc.invalidateQueries({ queryKey: ["events"] });
+        void qc.invalidateQueries({ queryKey: ["history"] });
+      }, 500);
+    };
 
     const connect = () => {
       const token = readToken();
@@ -31,13 +41,12 @@ export function useLiveSocket() {
       }
       setStatus("connecting");
       const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-      socket = new WebSocket(
-        `${scheme}://${window.location.host}/ws/live?token=${encodeURIComponent(token)}`,
-      );
+      socket = new WebSocket(`${scheme}://${window.location.host}/ws/live`);
 
       socket.onopen = () => {
         attemptRef.current = 0;
         setStatus("open");
+        refreshLists();
       };
 
       socket.onmessage = (event) => {
@@ -57,13 +66,9 @@ export function useLiveSocket() {
             prev ? { ...prev, camera: message.camera, ai: message.ai } : prev,
           );
         } else if (message.type === "event") {
-          qc.setQueriesData<{ rows: EventRow[]; total: number }>(
-            { queryKey: ["events"] },
-            (page) =>
-              page
-                ? { rows: [message.event, ...page.rows].slice(0, 200), total: page.total + 1 }
-                : page,
-          );
+          // The server owns filtering, pagination and totals. Batch invalidation
+          // over bursts instead of inserting unrelated rows into every cached page.
+          refreshLists();
         }
       };
 
@@ -83,6 +88,7 @@ export function useLiveSocket() {
     return () => {
       disposed = true;
       window.clearTimeout(reconnectTimer);
+      window.clearTimeout(refreshTimer);
       socket?.close();
     };
   }, [qc]);

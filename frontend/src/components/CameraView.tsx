@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { readToken } from "../api/client";
 import { useLanguage } from "../i18n/useLanguage";
 import { Icon } from "./Icon";
 
 /**
- * Annotated live feed from /api/stream/mjpeg. An <img> cannot send an auth
- * header, so the JWT rides in the query string. onError shows an honest
+ * Annotated live feed from /api/stream/mjpeg. The browser sends the HttpOnly
+ * session cookie automatically. onError shows an honest
  * "feed unavailable" card instead of a fake animation over a blank box.
  */
 export function CameraView({ active }: { active: boolean }) {
@@ -18,9 +17,8 @@ export function CameraView({ active }: { active: boolean }) {
     setNonce(Date.now());
   }, [active]);
 
-  const token = readToken();
-  const src = token ? `/api/stream/mjpeg?token=${encodeURIComponent(token)}&t=${nonce}` : "";
-  const showImage = active && !failed && Boolean(src);
+  const src = `/api/stream/mjpeg?t=${nonce}`;
+  const showImage = active && !failed;
 
   return (
     <div className="camera-view">

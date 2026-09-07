@@ -44,9 +44,10 @@ GT_DIR = REPO / "training" / "ground_truth"
 REPORTS = REPO / "training" / "reports"
 
 
-def tally_from_stream(events, line, inside):
+def tally_from_stream(events, line, inside, *, line2=None, min_track_updates=3, entry_zone=None):
     """events: iterable of (frame_idx, track_id, (cx, cy), now). Returns dict."""
-    counter = LineCrossingCounter(tuple(line[0]), tuple(line[1]), inside)
+    counter = LineCrossingCounter(tuple(line[0]), tuple(line[1]), inside,
+                                  line2=line2, min_track_updates=min_track_updates, entry_zone=entry_zone)
     smoother = CenterSmoother()
     result = {"IN": 0, "OUT": 0, "crossing_ids": set(), "track_ids": set()}
     for fidx, tid, center, now in events:
@@ -54,6 +55,7 @@ def tally_from_stream(events, line, inside):
         smoothed = smoother.update(tid, (int(center[0]), int(center[1])))
         crossing = counter.update(tid, smoothed, now=now)
         counter.prune(now=now)
+        smoother.prune(counter.tracks)
         if crossing:
             result[crossing.direction] += 1
             result["crossing_ids"].add(tid)
@@ -92,7 +94,7 @@ def pred_events(weights: str, gt: dict, ev: dict):
         if not ok:
             break
         fidx += 1
-        if skip and fidx % (skip + 1):
+        if (fidx + 1) % (skip + 1):
             continue
         res = detector.track(frame)
         if res.boxes is None:
@@ -116,9 +118,14 @@ def eval_weights(weights: str, ev: dict, clips: list[Path]) -> dict:
     for path in clips:
         gt = json.loads(path.read_text())
         line, inside = gt["line"], gt["inside_direction"]
-        g = tally_from_stream(gt_events(gt), line, inside)
+        entry_zone = ev.get("entry_zone")
+        if entry_zone and len(entry_zone) == 4:
+            entry_zone = (tuple(entry_zone[:2]), tuple(entry_zone[2:]))
+        options = {"line2": gt.get("line2"), "min_track_updates": ev.get("min_track_updates", 3),
+                   "entry_zone": entry_zone}
+        g = tally_from_stream(gt_events(gt), line, inside, **options)
         prows, per_class = pred_events(weights, gt, ev)
-        p = tally_from_stream(prows, line, inside)
+        p = tally_from_stream(prows, line, inside, **options)
 
         gt_net, pred_net = g["IN"] - g["OUT"], p["IN"] - p["OUT"]
         gt_total = g["IN"] + g["OUT"]
@@ -128,9 +135,9 @@ def eval_weights(weights: str, ev: dict, clips: list[Path]) -> dict:
             "pred": {"in": p["IN"], "out": p["OUT"], "net": pred_net,
                      "crossing_tracks": len(p["crossing_ids"]), "total_tracks": len(p["track_ids"])},
             "net_error": abs(pred_net - gt_net),
-            "counting_error_pct": round(abs(pred_net - gt_net) / max(gt_total, 1) * 100, 2),
+            "counting_error_pct": round((abs(p["IN"]-g["IN"]) + abs(p["OUT"]-g["OUT"])) / max(gt_total, 1) * 100, 2),
             "dir_abs_error": {"in": abs(p["IN"] - g["IN"]), "out": abs(p["OUT"] - g["OUT"])},
-            "id_switch_ratio": round(len(p["track_ids"]) / max(len(g["track_ids"]), 1), 2),
+            "track_count_ratio": round(len(p["track_ids"]) / max(len(g["track_ids"]), 1), 2),
             "pred_class_mix": per_class,
         }
         per_clip.append(row)
@@ -142,11 +149,10 @@ def eval_weights(weights: str, ev: dict, clips: list[Path]) -> dict:
 
     n = len(per_clip)
     overall = {
-        "counting_error_pct": round(abs((agg["pred_in"] - agg["pred_out"]) - (agg["gt_in"] - agg["gt_out"]))
-                                    / max(agg["gt_total"], 1) * 100, 2),
+        "counting_error_pct": round((agg["abs_in"] + agg["abs_out"]) / max(agg["gt_total"], 1) * 100, 2),
         "mae_in": round(agg["abs_in"] / n, 2),
         "mae_out": round(agg["abs_out"] / n, 2),
-        "id_switch_ratio": round(agg["pred_tracks"] / max(agg["gt_tracks"], 1), 2),
+        "track_count_ratio": round(agg["pred_tracks"] / max(agg["gt_tracks"], 1), 2),
         "gt_totals": {"in": agg["gt_in"], "out": agg["gt_out"]},
         "pred_totals": {"in": agg["pred_in"], "out": agg["pred_out"]},
     }
@@ -176,8 +182,8 @@ def main() -> int:
     checks = [
         ("counting error %", o["counting_error_pct"], gate["counting_error_pct"],
          o["counting_error_pct"] <= gate["counting_error_pct"]),
-        ("ID switch ratio", o["id_switch_ratio"], gate["id_switch_ratio"],
-         o["id_switch_ratio"] <= gate["id_switch_ratio"]),
+        ("Track count ratio", o["track_count_ratio"], gate["track_count_ratio"],
+         o["track_count_ratio"] <= gate["track_count_ratio"]),
     ]
 
     ts = time.strftime("%Y%m%d-%H%M%S")
@@ -196,11 +202,11 @@ def main() -> int:
     for r in main_result["per_clip"]:
         print(f"  {r['clip']:>4}  {r['gt']['in']:>4}/{r['gt']['out']:<5}  "
               f"{r['pred']['in']:>5}/{r['pred']['out']:<6}  {r['counting_error_pct']:>7.2f}  "
-              f"{r['id_switch_ratio']:>9.2f}")
+              f"{r['track_count_ratio']:>9.2f}")
     if baseline_result:
         b = baseline_result["overall"]
         print(f"\nbaseline {args.baseline}: err%={b['counting_error_pct']}  "
-              f"id_ratio={b['id_switch_ratio']}  mae_in={b['mae_in']}  mae_out={b['mae_out']}")
+              f"id_ratio={b['track_count_ratio']}  mae_in={b['mae_in']}  mae_out={b['mae_out']}")
 
     print("\n" + "=" * 60)
     print(f"{'metric':<20}{'value':>10}{'target':>10}   result")

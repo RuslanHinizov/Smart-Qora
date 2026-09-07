@@ -54,6 +54,7 @@ export function useStatsToday() {
   return useQuery({
     queryKey: keys.statsToday,
     queryFn: async () => (await apiFetch<Totals>("/statistics/today")).data,
+    refetchInterval: 15_000,
   });
 }
 

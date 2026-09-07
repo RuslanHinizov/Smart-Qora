@@ -20,9 +20,9 @@ async def test_snapshot_requires_a_token(client, reset_frame_bus):
 
 
 @pytest.mark.asyncio
-async def test_snapshot_accepts_query_token_and_returns_jpeg(client, admin_token, reset_frame_bus):
+async def test_snapshot_accepts_session_cookie_and_returns_jpeg(client, admin_token, reset_frame_bus):
     reset_frame_bus.publish(_FAKE_JPEG)
-    resp = await client.get(f"/api/stream/snapshot?token={admin_token}")
+    resp = await client.get("/api/stream/snapshot")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "image/jpeg"
     assert resp.content == _FAKE_JPEG
@@ -32,6 +32,12 @@ async def test_snapshot_accepts_query_token_and_returns_jpeg(client, admin_token
 async def test_mjpeg_requires_a_token(client):
     assert (await client.get("/api/stream/mjpeg")).status_code == 401
     assert (await client.get("/api/stream/mjpeg?token=not-a-jwt")).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_media_rejects_query_token(client, admin_token):
+    client.cookies.clear()
+    assert (await client.get(f"/api/stream/snapshot?token={admin_token}")).status_code == 401
 
 
 @pytest.mark.asyncio

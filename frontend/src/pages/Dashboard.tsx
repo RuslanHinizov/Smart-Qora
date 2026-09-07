@@ -112,7 +112,7 @@ export function Dashboard() {
         <div className="panel-head">
           <div>
             <span className="section-title">{t.recentEvents}</span>
-            <h3>{t.flowToday}</h3>
+            <h3>{t.latestMovement}</h3>
           </div>
         </div>
         {rows.length === 0 ? (

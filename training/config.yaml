@@ -48,6 +48,7 @@ eval:
   device: 0
   half: true
   frame_skip: 0
+  min_track_updates: 3
   allowed_classes: [sheep, cattle, goat, horse]
 
 # Acceptance gate — counting_eval.py / eval.py exit non-zero if any target is missed.
@@ -55,7 +56,7 @@ gate:
   map50_sheep: 0.90
   map5095_all: 0.60
   counting_error_pct: 5.0
-  id_switch_ratio: 1.5
+  track_count_ratio: 1.5
 
 # Dataset split (contiguous per-clip blocks so near-duplicate neighbouring
 # frames do not leak between splits). Must sum to 1.0.

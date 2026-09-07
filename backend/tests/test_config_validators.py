@@ -6,7 +6,8 @@ from app.core.config import Settings
 def _settings(**overrides):
     # lowercase field names — env-alias (UPPERCASE) kwargs are not populated by
     # pydantic-settings' __init__ and would be silently dropped by extra="ignore".
-    return Settings(_env_file=None, secret_key="x", **overrides)
+    values = {"secret_key": "x", **overrides}
+    return Settings(_env_file=None, **values)
 
 
 def test_defaults_are_valid():
@@ -21,6 +22,10 @@ def test_defaults_are_valid():
     ("frame_skip", -1),
     ("count_min_track_updates", -1),
     ("count_entry_zone", "10,20,30"),   # needs 4 values
+    ("count_entry_zone", "10,nope,30,40"),
+    ("count_entry_zone", "10,20,10,40"),
+    ("count_line2", "1,2,1,2"),
+    ("tz", "Mars/Olympus_Mons"),
     ("stream_fps", 0),
     ("telegram_aggregation_seconds", 0),
 ])
@@ -43,3 +48,10 @@ def test_csv_fields_still_parse():
     settings = _settings(allowed_classes="cow, sheep ,goat", cors_origins="http://a,http://b")
     assert settings.allowed_classes == ["cow", "sheep", "goat"]
     assert settings.cors_origins == ["http://a", "http://b"]
+
+
+def test_production_rejects_demo_secrets():
+    with pytest.raises(ValueError):
+        _settings(app_env="production", admin_password="admin")
+    settings = _settings(app_env="production", secret_key="x" * 32, admin_password="strong-password")
+    assert settings.app_env == "production"

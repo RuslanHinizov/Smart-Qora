@@ -40,8 +40,8 @@ export SMART_QORA_MODELS_URL=https://github.com/RuslanHinizov/Smart-Qora/release
 |---|---|---|---|
 | mAP50 (sheep), test split | ≥ 0.90 | **0.980** | — |
 | mAP50-95 (all), test split | ≥ 0.60 | **0.726** | — |
-| counting error % (4 clips, net) | ≤ 5% | **0.0%** (158/158) | 29.75% (111/158) |
-| ID-switch ratio | ≤ 1.5× | **1.14×** | 2.23× |
+| per-clip directional counting error | ≤ 5% | **0.0%** (158/158) | historical evaluator: 29.75% (111/158) |
+| detected-track / labelled-track ratio | ≤ 1.5× | **1.14×** | 2.23× |
 
 > The counting numbers come from replaying the dataset's own clips, which also fed
 > training, through the real `LineCrossingCounter`; they show the detector+tracker
@@ -49,6 +49,7 @@ export SMART_QORA_MODELS_URL=https://github.com/RuslanHinizov/Smart-Qora/release
 > guarantee. The Zenodo set is one location and 100% IN — collect site footage
 > (`training/extract_frames.py`), including an OUT clip, before a production claim.
 > Only `sheep` was trained; `cattle`/`goat`/`horse` stay at the base model's level.
+> The track ratio is a fragmentation proxy; it is not a measured identity-switch metric.
 
 ## Swapping in a new model
 

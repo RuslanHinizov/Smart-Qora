@@ -79,11 +79,11 @@ async def test_video_loop_replays_without_inflating_counts(monkeypatch, clean_db
     assert FakeCameraStream.instances >= 2  # the file looped
     async with SessionLocal() as db:
         count = await db.scalar(select(func.count()).select_from(AnimalEvent))
-        assert count == 1  # dedup held across loops
+        assert count == 1  # completed recording loops are preview-only
 
 
 @pytest.mark.asyncio
-async def test_replaying_the_same_footage_is_idempotent(monkeypatch, clean_db):
+async def test_new_live_session_counts_reused_tracking_ids(monkeypatch, clean_db):
     await _prepare_camera()
     script = straight_crossing_script(track_id=7, cls_index=1)
 
@@ -94,7 +94,7 @@ async def test_replaying_the_same_footage_is_idempotent(monkeypatch, clean_db):
 
     async with SessionLocal() as db:
         count = await db.scalar(select(func.count()).select_from(AnimalEvent))
-        assert count == 1
+        assert count == 2
         assert (await db.scalar(select(AnimalEvent.animal_type))) == "cattle"
         current = await db.scalar(select(HerdState.current_inside).where(HerdState.id == 1))
-        assert current == 1
+        assert current == 2

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from urllib.parse import urlsplit, urlunsplit
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
 from app.db.models import LineDirection, Role
 
@@ -20,7 +20,7 @@ class CameraCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     source: str = ""
     location: str = ""
-    is_active: bool = True
+    is_active: bool = False
     line_p1_x: int | None = None
     line_p1_y: int | None = None
     line_p2_x: int | None = None
@@ -32,8 +32,25 @@ class CameraCreate(BaseModel):
     inside_direction: LineDirection | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
     iou: float | None = Field(default=None, ge=0, le=1)
-    frame_skip: int = Field(default=0, ge=0)
-    stream_fps: int = Field(default=12, gt=0)
+    frame_skip: int | None = Field(default=None, ge=0)
+    stream_fps: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def valid_geometry(self):
+        from app.vision.counter import LineCrossingCounter
+        line = (self.line_p1_x, self.line_p1_y, self.line_p2_x, self.line_p2_y)
+        other = (self.line2_p1_x, self.line2_p1_y, self.line2_p2_x, self.line2_p2_y)
+        for coords in (line, other):
+            if any(v is not None for v in coords) and any(v is None for v in coords):
+                raise ValueError("Set all four line coordinates or clear the line")
+            if all(v is not None for v in coords) and coords[:2] == coords[2:]:
+                raise ValueError("Line endpoints must differ")
+        if other[0] is not None and line[0] is None:
+            raise ValueError("Set the first line before adding a second line")
+        if line[0] is not None:
+            LineCrossingCounter(line[:2], line[2:], (self.inside_direction or LineDirection.DOWN).value,
+                                line2=(other[:2], other[2:]) if other[0] is not None else None)
+        return self
 
 
 class CameraRead(CameraCreate):
@@ -109,6 +126,13 @@ class SettingsUpdate(BaseModel):
     default_iou: float | None = Field(default=None, ge=0, le=1)
     default_frame_skip: int | None = Field(default=None, ge=0)
     stream_fps: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def nonnullable_fields(self):
+        for field in ("default_language", "telegram_bot_token", "telegram_chat_id", "telegram_aggregation_seconds"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
 
 
 class HerdCalibrate(BaseModel):

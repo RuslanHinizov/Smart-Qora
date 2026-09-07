@@ -12,7 +12,7 @@ _TMPDIR = Path(tempfile.mkdtemp(prefix="smartqora-test-"))
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TMPDIR / 'test.db'}"
 os.environ["MODEL_PATH"] = str(_TMPDIR / "no-model.pt")  # lifespan skips the vision worker
 os.environ["REQUIRE_CUDA"] = "false"
-os.environ["SECRET_KEY"] = "test-secret"
+os.environ["SECRET_KEY"] = "test-secret-at-least-32-bytes-long"
 os.environ["ADMIN_USERNAME"] = "admin"
 os.environ["ADMIN_PASSWORD"] = "test-admin-pw"
 os.environ["CORS_ORIGINS"] = ""
@@ -51,10 +51,12 @@ from app.main import app  # noqa: E402
 async def clean_db():
     async with SessionLocal() as db:
         await db.execute(text("DELETE FROM animal_events"))
+        await db.execute(text("DELETE FROM recording_progress"))
         await db.execute(text("DELETE FROM daily_statistics"))
         await db.execute(text("DELETE FROM cameras"))
         await db.execute(text("UPDATE herd_state SET current_inside = 0, baseline = 0"))
         await db.execute(text("UPDATE app_settings SET default_language = 'ru', telegram_bot_token = '', telegram_chat_id = ''"))
+        await db.execute(text("UPDATE app_settings SET default_confidence = NULL, default_iou = NULL, default_frame_skip = NULL, stream_fps = NULL"))
         await db.commit()
     yield
 

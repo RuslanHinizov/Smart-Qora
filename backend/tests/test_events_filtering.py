@@ -12,7 +12,7 @@ BASE = datetime(2026, 9, 1, tzinfo=timezone.utc)
 @pytest_asyncio.fixture
 async def seeded(clean_db):
     async with SessionLocal() as db:
-        a, b = Camera(name="A", source="x"), Camera(name="B", source="y")
+        a, b = Camera(name="A", source="x"), Camera(name="B", source="y", is_active=False)
         db.add_all([a, b])
         await db.flush()
         db.add_all([

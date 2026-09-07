@@ -9,6 +9,7 @@ from app.core.config import get_settings
 
 _hasher = PasswordHasher()
 _ALGORITHM = "HS256"
+SESSION_COOKIE = "smart_qora_session"
 
 
 def hash_password(password: str) -> str:

@@ -6,7 +6,8 @@ defaulting to Russian.
 """
 
 import asyncio
-from datetime import date, timedelta
+from datetime import timedelta
+from app.core.calendar import site_day
 
 from sqlalchemy import func, select
 
@@ -71,7 +72,7 @@ def _tr(lang: str) -> dict:
 
 
 async def _week_totals(session) -> dict[str, int]:
-    since = date.today() - timedelta(days=6)
+    since = site_day() - timedelta(days=6)
     row = (await session.execute(
         select(func.coalesce(func.sum(DailyStatistic.total_in), 0),
                func.coalesce(func.sum(DailyStatistic.total_out), 0))

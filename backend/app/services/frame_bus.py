@@ -34,12 +34,19 @@ class FrameBus:
     def subscribe(self) -> asyncio.Queue[bytes]:
         queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=1)
         self._subscribers.add(queue)
-        if self.latest_jpeg is not None:
+        if self.is_fresh():
             queue.put_nowait(self.latest_jpeg)
         return queue
 
     def unsubscribe(self, queue: asyncio.Queue[bytes]) -> None:
         self._subscribers.discard(queue)
+
+    def clear(self):
+        self.latest_jpeg = None
+        self.latest_ts = 0.0
+        for queue in self._subscribers:
+            while not queue.empty():
+                queue.get_nowait()
 
 
 frame_bus = FrameBus()

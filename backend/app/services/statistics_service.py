@@ -1,4 +1,5 @@
-from datetime import date, datetime, time, timezone
+from datetime import date
+from app.core.calendar import day_bounds, site_day
 
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from app.db.models import AnimalEvent, DailyStatistic, Direction, HerdState
 async def today_totals(session: AsyncSession) -> dict[str, int]:
     """Dashboard totals: today's IN/OUT from the rollup (live-event fallback on first run)
     plus the calibratable ``herd_state`` count as ``current``."""
-    day = date.today()
+    day = site_day()
     agg = (await session.execute(
         select(func.coalesce(func.sum(DailyStatistic.total_in), 0),
                func.coalesce(func.sum(DailyStatistic.total_out), 0))
@@ -29,8 +30,7 @@ async def statistics(session: AsyncSession, day: date | None = None) -> dict[str
         func.coalesce(func.sum(case((AnimalEvent.direction == Direction.OUT, 1), else_=0)), 0),
     )
     if day is not None:
-        start = datetime.combine(day, time.min, tzinfo=timezone.utc)
-        end = datetime.combine(day, time.max, tzinfo=timezone.utc)
-        query = query.where(AnimalEvent.timestamp.between(start, end))
+        start, end = day_bounds(day)
+        query = query.where(AnimalEvent.timestamp >= start, AnimalEvent.timestamp < end)
     total_in, total_out = (await session.execute(query)).one()
     return {"total_in": int(total_in), "total_out": int(total_out), "current": int(total_in - total_out)}

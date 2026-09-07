@@ -29,7 +29,7 @@ async def ensure_default_camera(session: AsyncSession, settings: Settings) -> Ca
     session.add(camera)
     await session.commit()
     await session.refresh(camera)
-    logger.info("default_camera_seeded", extra={"camera_id": camera.id, "source": camera.source})
+    logger.info("default_camera_seeded", extra={"camera_id": camera.id})
     return camera
 
 

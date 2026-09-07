@@ -69,7 +69,7 @@ const en = {
   viewAll: "View all",
   noEvents: "No events yet",
   lastSync: "Updated",
-  flowToday: "Today's movement",
+  latestMovement: "Latest movement",
   movement: "Movement",
   arrivals: "Arrivals",
   departures: "Departures",
@@ -88,6 +88,13 @@ const en = {
   sourceHint: "File path, webcam index (0), or rtsp://user:pass@host/stream",
   location: "Location",
   activeToggle: "Active",
+  cameraSelectionHint:
+    "One camera counts at a time. Activating another camera switches counting to it.",
+  cameraDefaultsHint:
+    "Leave detection thresholds, frame skip or preview FPS blank to use Settings defaults.",
+  cameraSaveError: "Could not save. Check the lines, direction, thresholds and camera credentials.",
+  cameraDeleteError:
+    "Could not delete. Deactivate cameras with counting history to preserve their records.",
   countingLine: "Counting line",
   lineEditorHint: "Click to place the start and end of the counting line",
   lineStart: "Line start (x, y)",
@@ -239,7 +246,7 @@ const ru: Dictionary = {
   viewAll: "Все события",
   noEvents: "Событий пока нет",
   lastSync: "Обновлено",
-  flowToday: "Движение за сегодня",
+  latestMovement: "Последние перемещения",
   movement: "Движение",
   arrivals: "Вход",
   departures: "Выход",
@@ -257,6 +264,14 @@ const ru: Dictionary = {
   sourceHint: "Путь к файлу, индекс веб-камеры (0) или rtsp://user:pass@host/stream",
   location: "Расположение",
   activeToggle: "Активна",
+  cameraSelectionHint:
+    "Подсчёт ведёт одна камера. Включение другой камеры переключает подсчёт на неё.",
+  cameraDefaultsHint:
+    "Оставьте пороги, пропуск кадров или FPS пустыми, чтобы использовать общие настройки.",
+  cameraSaveError:
+    "Не удалось сохранить. Проверьте линии, направление, пороги и данные подключения.",
+  cameraDeleteError:
+    "Не удалось удалить. Камеру с историей подсчёта можно отключить, сохранив записи.",
   countingLine: "Линия подсчёта",
   lineEditorHint: "Нажмите, чтобы задать начало и конец линии подсчёта",
   lineStart: "Начало линии (x, y)",
@@ -402,7 +417,7 @@ const kk: Dictionary = {
   viewAll: "Барлығын көру",
   noEvents: "Әзірге оқиға жоқ",
   lastSync: "Жаңартылды",
-  flowToday: "Бүгінгі қозғалыс",
+  latestMovement: "Соңғы қозғалыстар",
   movement: "Қозғалыс",
   arrivals: "Кіру",
   departures: "Шығу",
@@ -420,6 +435,13 @@ const kk: Dictionary = {
   sourceHint: "Файл жолы, веб-камера индексі (0) немесе rtsp://user:pass@host/stream",
   location: "Орналасуы",
   activeToggle: "Белсенді",
+  cameraSelectionHint:
+    "Бір уақытта бір камера санайды. Басқа камераны қосқанда санау соған ауысады.",
+  cameraDefaultsHint:
+    "Жалпы параметрлерді қолдану үшін шектерді, кадр өткізу немесе FPS өрістерін бос қалдырыңыз.",
+  cameraSaveError: "Сақталмады. Сызықтарды, бағытты, шектерді және қосылу деректерін тексеріңіз.",
+  cameraDeleteError:
+    "Жою мүмкін болмады. Санау тарихы бар камераны жазбаларды сақтап, өшіруге болады.",
   countingLine: "Санау сызығы",
   lineEditorHint: "Санау сызығының басы мен соңын белгілеу үшін басыңыз",
   lineStart: "Сызық басы (x, y)",
@@ -565,7 +587,7 @@ const tr: Dictionary = {
   viewAll: "Tümünü gör",
   noEvents: "Henüz olay yok",
   lastSync: "Güncellendi",
-  flowToday: "Bugünkü hareket",
+  latestMovement: "Son hareketler",
   movement: "Hareket",
   arrivals: "Girişler",
   departures: "Çıkışlar",
@@ -583,6 +605,14 @@ const tr: Dictionary = {
   sourceHint: "Dosya yolu, web kamera indeksi (0) veya rtsp://user:pass@host/stream",
   location: "Konum",
   activeToggle: "Aktif",
+  cameraSelectionHint:
+    "Aynı anda bir kamera sayım yapar. Başka kamerayı etkinleştirmek sayımı ona geçirir.",
+  cameraDefaultsHint:
+    "Genel ayarları kullanmak için eşik, kare atlama veya önizleme FPS alanlarını boş bırakın.",
+  cameraSaveError:
+    "Kaydedilemedi. Çizgileri, yönü, eşikleri ve kamera bağlantı bilgilerini kontrol edin.",
+  cameraDeleteError:
+    "Silinemedi. Sayım geçmişi olan kamerayı, kayıtlarını korumak için pasifleştirin.",
   countingLine: "Sayım çizgisi",
   lineEditorHint: "Sayım çizgisinin başlangıç ve bitişini yerleştirmek için tıklayın",
   lineStart: "Çizgi başlangıcı (x, y)",

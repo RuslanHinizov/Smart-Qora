@@ -25,6 +25,7 @@ class TrackState:
     # dual-line
     zone: int = 0              # -1 = before A, 0 = in the gate, +1 = past B
     armed: str = ""            # "AB" or "BA" — the direction it is mid-crossing
+    pending_zone: int | None = None
 
 
 def _norm_rect(rect: Rect) -> tuple[int, int, int, int]:
@@ -67,6 +68,9 @@ class LineCrossingCounter:
                  line2: Line | None = None):
         if p1 == p2:
             raise ValueError("Counting line endpoints must differ")
+        probe = self.PROBE[inside_direction]
+        if (p2[0] - p1[0]) * probe[1] - (p2[1] - p1[1]) * probe[0] == 0:
+            raise ValueError("Inside direction must cross the counting line")
         self.p1, self.p2 = p1, p2
         self.inside_direction = inside_direction
         self.dead_zone = dead_zone
@@ -103,15 +107,19 @@ class LineCrossingCounter:
 
     # ── dual-line geometry ──────────────────────────────────────────────────
     def _setup_dual(self, line_a: Line, line_b: Line) -> None:
+        for first, second in ((line_a, line_b), (line_b, line_a)):
+            d1, d2 = (_raw_signed_distance(p, first) for p in second)
+            if d1 * d2 <= 0 or min(abs(d1), abs(d2)) <= 2 * self.dead_zone:
+                raise ValueError("Counting lines must not intersect or overlap their dead zones")
         # orient each line's positive side to face the other line, so the strip
         # between them is where both signed distances are positive.
         self._a, self._b = line_a, line_b
         self._sa = 1.0 if _raw_signed_distance(_mid(line_b), line_a) >= 0 else -1.0
         self._sb = 1.0 if _raw_signed_distance(_mid(line_a), line_b) >= 0 else -1.0
-        gate_mid = ((_mid(line_a)[0] + _mid(line_b)[0]) // 2, (_mid(line_a)[1] + _mid(line_b)[1]) // 2)
         px, py = self.PROBE[self.inside_direction]
-        probe_point = (gate_mid[0] + px * 10000, gate_mid[1] + py * 10000)
-        self._inside_zone = self._zone(probe_point) or 1  # -1 (past A) or +1 (past B)
+        dx, dy = line_a[1][0] - line_a[0][0], line_a[1][1] - line_a[0][1]
+        heading = self._sa * (dx * py - dy * px)
+        self._inside_zone = 1 if heading > 0 else -1
 
     def _zone(self, point: Point) -> int:
         da = self._sa * _raw_signed_distance(point, self._a)
@@ -185,6 +193,13 @@ class LineCrossingCounter:
             state.in_zone = True
 
         z = self._zone(center)
+        if state.pending_zone is not None:
+            if z != -99 and z != state.pending_zone:
+                state.pending_zone = None
+            elif z == state.pending_zone and not self._gates_block(state, center):
+                state.pending_zone = None
+                state.last_counted = now
+                return self._emit(tracking_id, "IN" if z == self._inside_zone else "OUT")
         if z == -99 or z == state.zone:
             return None
 
@@ -207,7 +222,10 @@ class LineCrossingCounter:
         if not crossed:
             return None
         state.armed = ""
-        if self._gates_block(state, center) or now - state.last_counted < self.cooldown_seconds:
+        if now - state.last_counted < self.cooldown_seconds:
+            return None
+        if self._gates_block(state, center):
+            state.pending_zone = z
             return None
         state.last_counted = now
         ends_zone = 1 if crossed == "AB" else -1

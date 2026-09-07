@@ -17,3 +17,4 @@ pytest-asyncio==0.25.0
 aiosqlite==0.20.0
 httpx==0.28.1
 ruff==0.16.5
+tzdata==2026.3

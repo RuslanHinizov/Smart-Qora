@@ -1,5 +1,7 @@
 import pytest
 
+from app.core.security import SESSION_COOKIE
+
 
 @pytest.mark.asyncio
 async def test_login_success_and_me(client, admin_token, auth):
@@ -7,6 +9,18 @@ async def test_login_success_and_me(client, admin_token, auth):
     assert me.status_code == 200
     body = me.json()
     assert body["username"] == "admin" and body["role"] == "admin" and body["is_active"] is True
+
+
+@pytest.mark.asyncio
+async def test_login_sets_httponly_cookie_and_logout_clears_it(client, admin_token, auth):
+    response = await client.post(
+        "/api/auth/login", data={"username": "admin", "password": "test-admin-pw"}
+    )
+    cookie = response.headers["set-cookie"]
+    assert SESSION_COOKIE in cookie and "HttpOnly" in cookie and "SameSite=strict" in cookie
+    assert (await client.get("/api/auth/me")).status_code == 200
+    assert (await client.post("/api/auth/logout", headers=auth(admin_token))).status_code == 204
+    assert (await client.get("/api/auth/me")).status_code == 401
 
 
 @pytest.mark.asyncio

@@ -15,7 +15,7 @@ from app.api.routes import (
 )
 from app.core.config import get_settings
 from app.core.logging import configure_logging
-from app.core.security import decode_token
+from app.core.security import SESSION_COOKIE, decode_token
 from app.db.database import SessionLocal
 from app.db.seed import ensure_admin, ensure_default_camera
 from app.services.websocket_manager import websockets
@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if int(os.getenv("WEB_CONCURRENCY", "1")) != 1:
-        logger.critical("multiple_web_workers_unsupported: the in-process vision worker and "
-                        "WebSocket broadcaster require WEB_CONCURRENCY=1")
+        raise RuntimeError("The in-process vision worker requires WEB_CONCURRENCY=1")
     async with SessionLocal() as session:
         await ensure_admin(session, settings)
         await ensure_default_camera(session, settings)
@@ -83,7 +82,7 @@ for router in (system.router, auth.router, settings_routes.router, cameras.route
 
 @app.websocket("/ws/live")
 async def live(websocket: WebSocket):
-    token = websocket.query_params.get("token", "")
+    token = websocket.cookies.get(SESSION_COOKIE, "")
     try:
         int(decode_token(token)["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):

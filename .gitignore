@@ -30,6 +30,7 @@ datasets/**/_tmp_video/
 runs/
 training/reports/
 coverage/
+backups/
 *.db
 *.log
 .codebase-memory/

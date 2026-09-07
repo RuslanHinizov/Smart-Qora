@@ -18,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => readToken());
 
   const logout = useCallback(() => {
+    void apiFetch<void>("/auth/logout", { method: "POST" }).catch(() => undefined);
     writeToken(null);
     setToken(null);
     qc.clear();

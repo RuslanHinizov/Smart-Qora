@@ -10,7 +10,7 @@ const EMPTY: CameraInput = {
   name: "",
   source: "",
   location: "",
-  is_active: true,
+  is_active: false,
   line_p1_x: null,
   line_p1_y: null,
   line_p2_x: null,
@@ -22,8 +22,8 @@ const EMPTY: CameraInput = {
   inside_direction: null,
   confidence: null,
   iou: null,
-  frame_skip: 0,
-  stream_fps: 12,
+  frame_skip: null,
+  stream_fps: null,
 };
 
 function toInput(camera: Camera): CameraInput {
@@ -39,14 +39,20 @@ export function Cameras() {
   const cameras = useCameras();
   const { create, update, remove } = useCameraMutations();
   const [editing, setEditing] = useState<{ id: number | null; input: CameraInput } | null>(null);
+  const [saveError, setSaveError] = useState(false);
 
   const list = cameras.data ?? [];
 
   const save = async () => {
     if (!editing) return;
-    if (editing.id === null) await create.mutateAsync(editing.input);
-    else await update.mutateAsync({ id: editing.id, input: editing.input });
-    setEditing(null);
+    setSaveError(false);
+    try {
+      if (editing.id === null) await create.mutateAsync(editing.input);
+      else await update.mutateAsync({ id: editing.id, input: editing.input });
+      setEditing(null);
+    } catch {
+      setSaveError(true);
+    }
   };
 
   return (
@@ -65,6 +71,8 @@ export function Cameras() {
       </div>
 
       <div className="card panel">
+        <p className="hint">{t.cameraSelectionHint}</p>
+        {remove.isError && <p role="alert">{t.cameraDeleteError}</p>}
         {list.length === 0 ? (
           <div className="empty">
             <Icon name="camera" />
@@ -255,7 +263,7 @@ export function Cameras() {
                   value={editing.input.frame_skip}
                   step={1}
                   onChange={(v) =>
-                    setEditing({ ...editing, input: { ...editing.input, frame_skip: v ?? 0 } })
+                    setEditing({ ...editing, input: { ...editing.input, frame_skip: v } })
                   }
                 />
                 <NumField
@@ -263,7 +271,7 @@ export function Cameras() {
                   value={editing.input.stream_fps}
                   step={1}
                   onChange={(v) =>
-                    setEditing({ ...editing, input: { ...editing.input, stream_fps: v ?? 12 } })
+                    setEditing({ ...editing, input: { ...editing.input, stream_fps: v } })
                   }
                 />
               </div>
@@ -289,6 +297,8 @@ export function Cameras() {
               </label>
             </div>
 
+            {saveError && <p role="alert">{t.cameraSaveError}</p>}
+            <p className="hint">{t.cameraDefaultsHint}</p>
             <div className="drawer-actions">
               <button
                 className="btn primary"

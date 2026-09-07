@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from app.db.database import SessionLocal
 from app.db.models import AnimalEvent, AppSettings
 from app.services.statistics_service import today_totals
+from app.core.calendar import site_now
 from app.telegram.notifications import format_alert, format_digest
 from app.telegram.notifications import notifier
 
@@ -72,7 +73,7 @@ async def digest_loop(app, interval: float = 60.0) -> None:
                 hour = row.telegram_digest_hour if row else None
                 if hour is None:
                     continue
-                now = datetime.now()
+                now = site_now()
                 if now.hour != hour or now.date() == sent_on:
                     continue
                 totals = await today_totals(session)
