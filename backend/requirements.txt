@@ -6,7 +6,7 @@ alembic==1.14.0
 pydantic-settings==2.15.0
 python-telegram-bot==21.9
 pyjwt==2.13.0
-argon2-cffi==23.1.0
+argon2-cffi==25.1.0
 python-multipart==0.0.32
 asgi-correlation-id==4.3.4
 opencv-python-headless==4.10.0.84
