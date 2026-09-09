@@ -150,7 +150,7 @@ export function Cameras() {
               />
               <div className="form-row">
                 <div className="field">
-                  <label>Outside zone</label>
+                  <label>{t.outsideZone}</label>
                   <select
                     className="select"
                     value={editing.input.outside_zone_id ?? ""}
@@ -164,7 +164,7 @@ export function Cameras() {
                       })
                     }
                   >
-                    <option value="">Not connected</option>
+                    <option value="">{t.notConnected}</option>
                     {(zones.data ?? []).map((zone) => (
                       <option key={zone.id} value={zone.id}>
                         {zone.name}
@@ -173,7 +173,7 @@ export function Cameras() {
                   </select>
                 </div>
                 <div className="field">
-                  <label>Inside zone</label>
+                  <label>{t.insideZone}</label>
                   <select
                     className="select"
                     value={editing.input.inside_zone_id ?? ""}
@@ -187,7 +187,7 @@ export function Cameras() {
                       })
                     }
                   >
-                    <option value="">Not connected</option>
+                    <option value="">{t.notConnected}</option>
                     {(zones.data ?? []).map((zone) => (
                       <option key={zone.id} value={zone.id}>
                         {zone.name}

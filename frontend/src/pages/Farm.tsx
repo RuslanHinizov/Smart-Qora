@@ -6,228 +6,39 @@ import {
   useInventory,
   useInventoryMovements,
 } from "../api/queries";
-import type { AnimalGroup, AnimalSpecies, FarmZone, ZoneKind } from "../api/types";
+import type { AnimalGroup, AnimalSpecies, FarmZone, MovementKind, ZoneKind } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { Icon } from "../components/Icon";
+import type { TranslationKey } from "../i18n/translations";
 import { useLanguage } from "../i18n/useLanguage";
 
-const copy = {
-  tr: {
-    title: "Çiftliğini kur",
-    subtitle:
-      "Önce alanları ve hayvan sayılarını gir. Kamera daha sonra bu sayıları otomatik günceller.",
-    step1: "1. Alanları ekle",
-    step2: "2. Hayvan gruplarını ekle",
-    step3: "3. Başlangıç sayısını gir",
-    quickFarm: "Ana Ağıl ve Mera oluştur",
-    quickAnimals: "Koyun, inek, at ve keçiyi ekle",
-    areaExample: "Örnek: Ana Ağıl",
-    groupExample: "Örnek: Koyun",
-    defaultForSpecies: "Bu tür için varsayılan grup",
-    defaultBadge: "Varsayılan",
-    addArea: "Alanı ekle",
-    addGroup: "Grubu ekle",
-    inventoryArea: "Hayvanlar şu anda nerede?",
-    inventoryHint: "Her hayvan grubunun gerçek sayısını gir.",
-    saveStart: "Başlangıç sayısını kaydet",
-    current: "Şu anki sayılar",
-    physical: "Gerçek sayım ile kontrol et",
-    physicalHint: "Fark varsa gerçek sayıyı yaz ve kaydet. Sistem düzeltmeyi ayrıca kaydeder.",
-    save: "Kaydet",
-    history: "Hareket geçmişi",
-    noAreas: "Henüz alan eklenmedi.",
-    noGroups: "Henüz hayvan grubu eklenmedi.",
-    empty: "Henüz hareket yok.",
-    quantity: "Adet",
-    reason: "Not / neden",
-    setupError: "Kaydedilemedi. Aynı isimde bir kayıt olabilir.",
-    transferTitle: "Bölgeler arası aktarım",
-    transferHint: "Bir grubu bir bölgeden diğerine elle taşı. Neden zorunludur.",
-    from: "Kaynak bölge",
-    to: "Hedef bölge",
-    transferAction: "Aktar",
-    active: "Aktif",
-    inactive: "Pasif",
-  },
-  ru: {
-    title: "Настройте ферму",
-    subtitle:
-      "Сначала укажите зоны и количество животных. Затем камера будет обновлять числа автоматически.",
-    step1: "1. Добавьте зоны",
-    step2: "2. Добавьте группы животных",
-    step3: "3. Укажите начальное количество",
-    quickFarm: "Создать загон и пастбище",
-    quickAnimals: "Добавить овец, КРС, лошадей и коз",
-    areaExample: "Например: Основной загон",
-    groupExample: "Например: Овцы",
-    defaultForSpecies: "Группа по умолчанию для этого вида",
-    defaultBadge: "По умолчанию",
-    addArea: "Добавить зону",
-    addGroup: "Добавить группу",
-    inventoryArea: "Где сейчас животные?",
-    inventoryHint: "Укажите фактическое количество в каждой группе.",
-    saveStart: "Сохранить начальный остаток",
-    current: "Текущие остатки",
-    physical: "Сверка с фактическим подсчётом",
-    physicalHint: "Если есть разница, укажите фактическое число. Исправление сохранится отдельно.",
-    save: "Сохранить",
-    history: "История перемещений",
-    noAreas: "Зоны ещё не добавлены.",
-    noGroups: "Группы животных ещё не добавлены.",
-    empty: "Перемещений пока нет.",
-    quantity: "Количество",
-    reason: "Примечание / причина",
-    setupError: "Не удалось сохранить. Возможно, такое название уже есть.",
-    transferTitle: "Перемещение между зонами",
-    transferHint: "Вручную переместите группу из одной зоны в другую. Причина обязательна.",
-    from: "Из зоны",
-    to: "В зону",
-    transferAction: "Переместить",
-    active: "Активна",
-    inactive: "Неактивна",
-  },
-  kk: {
-    title: "Ферманы баптаңыз",
-    subtitle:
-      "Алдымен аймақтар мен мал санын енгізіңіз. Кейін камера сандарды автоматты жаңартады.",
-    step1: "1. Аймақтарды қосыңыз",
-    step2: "2. Мал топтарын қосыңыз",
-    step3: "3. Бастапқы санын енгізіңіз",
-    quickFarm: "Қора мен жайылымды құру",
-    quickAnimals: "Қой, ірі қара, жылқы және ешкі қосу",
-    areaExample: "Мысалы: Негізгі қора",
-    groupExample: "Мысалы: Қой",
-    defaultForSpecies: "Осы түр үшін негізгі топ",
-    defaultBadge: "Негізгі",
-    addArea: "Аймақ қосу",
-    addGroup: "Топ қосу",
-    inventoryArea: "Мал қазір қайда?",
-    inventoryHint: "Әр топтың нақты санын енгізіңіз.",
-    saveStart: "Бастапқы санды сақтау",
-    current: "Қазіргі сан",
-    physical: "Нақты санмен салыстыру",
-    physicalHint: "Айырма болса, нақты санды жазыңыз. Түзету бөлек сақталады.",
-    save: "Сақтау",
-    history: "Қозғалыс тарихы",
-    noAreas: "Әлі аймақ қосылмады.",
-    noGroups: "Әлі мал тобы қосылмады.",
-    empty: "Әлі қозғалыс жоқ.",
-    quantity: "Саны",
-    reason: "Ескерту / себеп",
-    setupError: "Сақталмады. Осындай атау бар болуы мүмкін.",
-    transferTitle: "Аймақтар арасында ауыстыру",
-    transferHint: "Топты бір аймақтан екіншісіне қолмен ауыстырыңыз. Себеп міндетті.",
-    from: "Қайдан",
-    to: "Қайда",
-    transferAction: "Ауыстыру",
-    active: "Белсенді",
-    inactive: "Белсенді емес",
-  },
-  en: {
-    title: "Set up your farm",
-    subtitle:
-      "Add the areas and starting animal numbers first. The camera updates them automatically afterwards.",
-    step1: "1. Add areas",
-    step2: "2. Add animal groups",
-    step3: "3. Enter starting numbers",
-    quickFarm: "Create pen and pasture",
-    quickAnimals: "Add sheep, cattle, horses and goats",
-    areaExample: "Example: Main pen",
-    groupExample: "Example: Sheep",
-    defaultForSpecies: "Default group for this species",
-    defaultBadge: "Default",
-    addArea: "Add area",
-    addGroup: "Add group",
-    inventoryArea: "Where are the animals now?",
-    inventoryHint: "Enter the actual count for every group.",
-    saveStart: "Save starting numbers",
-    current: "Current numbers",
-    physical: "Check against a physical count",
-    physicalHint: "Enter the real number when it differs. The correction is stored separately.",
-    save: "Save",
-    history: "Movement history",
-    noAreas: "No areas yet.",
-    noGroups: "No animal groups yet.",
-    empty: "No movements yet.",
-    quantity: "Quantity",
-    reason: "Note / reason",
-    setupError: "Could not save. A record with this name may already exist.",
-    transferTitle: "Transfer between zones",
-    transferHint: "Manually move a group from one zone to another. A reason is required.",
-    from: "From zone",
-    to: "To zone",
-    transferAction: "Transfer",
-    active: "Active",
-    inactive: "Inactive",
-  },
-} as const;
-
-const labels: Record<string, Record<string, string>> = {
-  tr: {
-    PEN: "Ağıl / kapalı alan",
-    PASTURE: "Mera / açık alan",
-    QUARANTINE: "Karantina",
-    EXTERNAL: "Çiftlik dışı",
-    sheep: "Koyun",
-    cattle: "İnek",
-    goat: "Keçi",
-    horse: "At",
-    INITIAL: "Başlangıç",
-    CAMERA: "Kamera geçişi",
-    MANUAL_ADJUSTMENT: "Sayım düzeltmesi",
-    TRANSFER: "Elle aktarım",
-  },
-  ru: {
-    PEN: "Загон / закрытая зона",
-    PASTURE: "Пастбище / открытая зона",
-    QUARANTINE: "Карантин",
-    EXTERNAL: "Вне фермы",
-    sheep: "Овцы",
-    cattle: "КРС",
-    goat: "Козы",
-    horse: "Лошади",
-    INITIAL: "Начальный остаток",
-    CAMERA: "Проход камеры",
-    MANUAL_ADJUSTMENT: "Корректировка подсчёта",
-    TRANSFER: "Ручное перемещение",
-  },
-  kk: {
-    PEN: "Қора / жабық аймақ",
-    PASTURE: "Жайылым / ашық аймақ",
-    QUARANTINE: "Карантин",
-    EXTERNAL: "Фермадан тыс",
-    sheep: "Қой",
-    cattle: "Ірі қара",
-    goat: "Ешкі",
-    horse: "Жылқы",
-    INITIAL: "Бастапқы сан",
-    CAMERA: "Камера өтуі",
-    MANUAL_ADJUSTMENT: "Сан түзетуі",
-    TRANSFER: "Қолмен ауыстыру",
-  },
-  en: {
-    PEN: "Pen / indoor",
-    PASTURE: "Pasture / outdoor",
-    QUARANTINE: "Quarantine",
-    EXTERNAL: "Outside farm",
-    sheep: "Sheep",
-    cattle: "Cattle",
-    goat: "Goats",
-    horse: "Horses",
-    INITIAL: "Starting inventory",
-    CAMERA: "Camera crossing",
-    MANUAL_ADJUSTMENT: "Count correction",
-    TRANSFER: "Manual transfer",
-  },
-};
 const species: AnimalSpecies[] = ["sheep", "cattle", "goat", "horse"];
 const kinds: ZoneKind[] = ["PEN", "PASTURE", "QUARANTINE", "EXTERNAL"];
+
+const SPECIES_KEY: Record<AnimalSpecies, TranslationKey> = {
+  sheep: "speciesSheep",
+  cattle: "speciesCattle",
+  goat: "speciesGoat",
+  horse: "speciesHorse",
+};
+const ZONE_KIND_KEY: Record<ZoneKind, TranslationKey> = {
+  PEN: "zoneKindPen",
+  PASTURE: "zoneKindPasture",
+  QUARANTINE: "zoneKindQuarantine",
+  EXTERNAL: "zoneKindExternal",
+};
+const MOVEMENT_KIND_KEY: Record<MovementKind, TranslationKey> = {
+  INITIAL: "movementKindInitial",
+  CAMERA: "movementKindCamera",
+  MANUAL_ADJUSTMENT: "movementKindManualAdjustment",
+  TRANSFER: "movementKindTransfer",
+};
+const QUICK_PEN_NAME = { tr: "Ana Ağıl", ru: "Основной загон", kk: "Негізгі қора", en: "Main Pen" };
+const QUICK_PASTURE_NAME = { tr: "Mera", ru: "Пастбище", kk: "Жайылым", en: "Pasture" };
 
 export function Farm() {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
-  const c = copy[language];
-  const l = labels[language];
   const zones = useFarmZones();
   const groups = useAnimalGroups();
   const inventory = useInventory();
@@ -266,13 +77,13 @@ export function Farm() {
   const quickFarm = () =>
     submit(async () => {
       await createZone.mutateAsync({
-        name: language === "tr" ? "Ana Ağıl" : language === "ru" ? "Основной загон" : "Main Pen",
+        name: QUICK_PEN_NAME[language],
         kind: "PEN",
         is_active: true,
         sort_order: 0,
       });
       await createZone.mutateAsync({
-        name: language === "tr" ? "Mera" : language === "ru" ? "Пастбище" : "Pasture",
+        name: QUICK_PASTURE_NAME[language],
         kind: "PASTURE",
         is_active: true,
         sort_order: 1,
@@ -280,16 +91,10 @@ export function Farm() {
     });
   const quickAnimals = () =>
     submit(async () => {
-      const names =
-        language === "tr"
-          ? ["Koyun", "İnek", "At", "Keçi"]
-          : language === "ru"
-            ? ["Овцы", "КРС", "Лошади", "Козы"]
-            : ["Sheep", "Cattle", "Horses", "Goats"];
-      for (const [index, type] of ["sheep", "cattle", "horse", "goat"].entries())
+      for (const [index, type] of species.entries())
         await createGroup.mutateAsync({
-          name: names[index],
-          species: type as AnimalSpecies,
+          name: t[SPECIES_KEY[type]],
+          species: type,
           is_default_for_species: false,
           is_active: true,
           sort_order: index,
@@ -299,33 +104,33 @@ export function Farm() {
     <main className="page farm-page">
       <div className="page-head">
         <div>
-          <span className="section-title">{c.title}</span>
-          <p>{c.subtitle}</p>
+          <span className="section-title">{t.farmTitle}</span>
+          <p>{t.farmSubtitle}</p>
         </div>
       </div>
       {!isAdmin && <div className="notice">{t.readOnlyForViewers}</div>}
-      {error && <div className="notice">{c.setupError}</div>}
+      {error && <div className="notice">{t.farmSetupError}</div>}
       <section className="farm-steps">
         <div className={zoneList.length ? "done" : ""}>
           <b>1</b>
-          <span>{c.step1}</span>
+          <span>{t.farmStep1}</span>
         </div>
         <div className={groupList.length ? "done" : ""}>
           <b>2</b>
-          <span>{c.step2}</span>
+          <span>{t.farmStep2}</span>
         </div>
         <div className={hasInventory ? "done" : ""}>
           <b>3</b>
-          <span>{c.step3}</span>
+          <span>{t.farmStep3}</span>
         </div>
       </section>
       <div className="grid-2 even">
         <section className="card panel">
           <div className="panel-head">
-            <h3>{c.step1}</h3>
+            <h3>{t.farmStep1}</h3>
             {zoneList.length === 0 && isAdmin && (
               <button className="btn sm primary" onClick={quickFarm}>
-                {c.quickFarm}
+                {t.farmQuickZones}
               </button>
             )}
           </div>
@@ -353,7 +158,7 @@ export function Farm() {
                     >
                       {kinds.map((kind) => (
                         <option key={kind} value={kind}>
-                          {l[kind]}
+                          {t[ZONE_KIND_KEY[kind]]}
                         </option>
                       ))}
                     </select>
@@ -368,7 +173,7 @@ export function Farm() {
                           })
                         }
                       />
-                      {c.active}
+                      {t.activeToggle}
                     </label>
                     <button
                       className="btn sm primary"
@@ -390,7 +195,11 @@ export function Farm() {
                   <div key={zone.id}>
                     <span className="farm-dot" />
                     <strong>{zone.name}</strong>
-                    <small>{zone.is_active ? l[zone.kind] : `${l[zone.kind]} · ${c.inactive}`}</small>
+                    <small>
+                      {zone.is_active
+                        ? t[ZONE_KIND_KEY[zone.kind]]
+                        : `${t[ZONE_KIND_KEY[zone.kind]]} · ${t.inactive}`}
+                    </small>
                     {isAdmin && (
                       <button className="btn sm ghost" onClick={() => setEditingZone({ id: zone.id, draft: zone })}>
                         {t.edit}
@@ -401,13 +210,13 @@ export function Farm() {
               )}
             </div>
           ) : (
-            <p className="hint">{c.noAreas}</p>
+            <p className="hint">{t.farmNoAreas}</p>
           )}
           {isAdmin && (
             <div className="farm-add">
               <input
                 className="input"
-                placeholder={c.areaExample}
+                placeholder={t.farmAreaExample}
                 value={zoneName}
                 onChange={(e) => setZoneName(e.target.value)}
               />
@@ -418,7 +227,7 @@ export function Farm() {
               >
                 {kinds.map((kind) => (
                   <option key={kind} value={kind}>
-                    {l[kind]}
+                    {t[ZONE_KIND_KEY[kind]]}
                   </option>
                 ))}
               </select>
@@ -438,17 +247,17 @@ export function Farm() {
                 }
               >
                 <Icon name="plus" size={16} />
-                {c.addArea}
+                {t.farmAddArea}
               </button>
             </div>
           )}
         </section>
         <section className="card panel">
           <div className="panel-head">
-            <h3>{c.step2}</h3>
+            <h3>{t.farmStep2}</h3>
             {groupList.length === 0 && isAdmin && (
               <button className="btn sm primary" onClick={quickAnimals}>
-                {c.quickAnimals}
+                {t.farmQuickGroups}
               </button>
             )}
           </div>
@@ -479,7 +288,7 @@ export function Farm() {
                     >
                       {species.map((type) => (
                         <option key={type} value={type}>
-                          {l[type]}
+                          {t[SPECIES_KEY[type]]}
                         </option>
                       ))}
                     </select>
@@ -494,7 +303,7 @@ export function Farm() {
                           })
                         }
                       />
-                      {c.defaultForSpecies}
+                      {t.farmDefaultForSpecies}
                     </label>
                     <label className="farm-add-check">
                       <input
@@ -507,7 +316,7 @@ export function Farm() {
                           })
                         }
                       />
-                      {c.active}
+                      {t.activeToggle}
                     </label>
                     <button
                       className="btn sm primary"
@@ -529,8 +338,12 @@ export function Farm() {
                   <div key={group.id}>
                     <span className="farm-dot animal" />
                     <strong>{group.name}</strong>
-                    <small>{group.is_active ? l[group.species] : `${l[group.species]} · ${c.inactive}`}</small>
-                    {group.is_default_for_species && <span className="pill">{c.defaultBadge}</span>}
+                    <small>
+                      {group.is_active
+                        ? t[SPECIES_KEY[group.species]]
+                        : `${t[SPECIES_KEY[group.species]]} · ${t.inactive}`}
+                    </small>
+                    {group.is_default_for_species && <span className="pill">{t.farmDefaultBadge}</span>}
                     {isAdmin && (
                       <button
                         className="btn sm ghost"
@@ -544,13 +357,13 @@ export function Farm() {
               )}
             </div>
           ) : (
-            <p className="hint">{c.noGroups}</p>
+            <p className="hint">{t.farmNoGroups}</p>
           )}
           {isAdmin && (
             <div className="farm-add with-check">
               <input
                 className="input"
-                placeholder={c.groupExample}
+                placeholder={t.farmGroupExample}
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
               />
@@ -561,7 +374,7 @@ export function Farm() {
               >
                 {species.map((type) => (
                   <option key={type} value={type}>
-                    {l[type]}
+                    {t[SPECIES_KEY[type]]}
                   </option>
                 ))}
               </select>
@@ -571,7 +384,7 @@ export function Farm() {
                   checked={groupDefault}
                   onChange={(e) => setGroupDefault(e.target.checked)}
                 />
-                {c.defaultForSpecies}
+                {t.farmDefaultForSpecies}
               </label>
               <button
                 className="btn"
@@ -591,7 +404,7 @@ export function Farm() {
                 }
               >
                 <Icon name="plus" size={16} />
-                {c.addGroup}
+                {t.farmAddGroup}
               </button>
             </div>
           )}
@@ -600,18 +413,18 @@ export function Farm() {
       {!hasInventory && (
         <section className="card panel farm-initial">
           <div className="panel-head">
-            <h3>{c.step3}</h3>
+            <h3>{t.farmStep3}</h3>
           </div>
-          <p className="hint">{c.inventoryHint}</p>
+          <p className="hint">{t.farmInventoryHint}</p>
           <label className="field">
-            <span>{c.inventoryArea}</span>
+            <span>{t.farmInventoryArea}</span>
             <select
               className="select"
               value={startZone}
               onChange={(e) => setStartZone(e.target.value)}
               disabled={!isAdmin}
             >
-              <option value="">{c.areaExample}</option>
+              <option value="">{t.farmAreaExample}</option>
               {zoneList.map((zone) => (
                 <option key={zone.id} value={zone.id}>
                   {zone.name}
@@ -660,7 +473,7 @@ export function Farm() {
                 )
               }
             >
-              {c.saveStart}
+              {t.farmSaveStart}
             </button>
           )}
         </section>
@@ -669,7 +482,7 @@ export function Farm() {
         <>
           <section className="card panel">
             <div className="panel-head">
-              <h3>{c.current}</h3>
+              <h3>{t.farmCurrent}</h3>
             </div>
             <div className="farm-balance-grid">
               {rows.map((row) => (
@@ -683,12 +496,12 @@ export function Farm() {
           </section>
           <section className="card panel">
             <div className="panel-head">
-              <h3>{c.physical}</h3>
+              <h3>{t.farmPhysical}</h3>
             </div>
-            <p className="hint">{c.physicalHint}</p>
+            <p className="hint">{t.farmPhysicalHint}</p>
             <input
               className="input"
-              placeholder={c.reason}
+              placeholder={t.reason}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               disabled={!isAdmin}
@@ -697,10 +510,10 @@ export function Farm() {
               <table className="data">
                 <thead>
                   <tr>
-                    <th>{c.step1}</th>
-                    <th>{c.step2}</th>
-                    <th>{c.quantity}</th>
-                    <th>{c.physical}</th>
+                    <th>{t.farmStep1}</th>
+                    <th>{t.farmStep2}</th>
+                    <th>{t.quantity}</th>
+                    <th>{t.farmPhysical}</th>
                     <th />
                   </tr>
                 </thead>
@@ -740,7 +553,7 @@ export function Farm() {
                                 )
                               }
                             >
-                              {c.save}
+                              {t.save}
                             </button>
                           )}
                         </td>
@@ -753,13 +566,13 @@ export function Farm() {
           </section>
           <section className="card panel">
             <div className="panel-head">
-              <h3>{c.transferTitle}</h3>
+              <h3>{t.farmTransferTitle}</h3>
             </div>
-            <p className="hint">{c.transferHint}</p>
+            <p className="hint">{t.farmTransferHint}</p>
             {isAdmin && (
               <div className="farm-transfer-grid">
                 <select className="select" value={transferGroup} onChange={(e) => setTransferGroup(e.target.value)}>
-                  <option value="">{c.step2}</option>
+                  <option value="">{t.farmStep2}</option>
                   {groupList.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -767,7 +580,7 @@ export function Farm() {
                   ))}
                 </select>
                 <select className="select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
-                  <option value="">{c.from}</option>
+                  <option value="">{t.fromZone}</option>
                   {zoneList.map((zone) => (
                     <option key={zone.id} value={zone.id}>
                       {zone.name}
@@ -775,7 +588,7 @@ export function Farm() {
                   ))}
                 </select>
                 <select className="select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
-                  <option value="">{c.to}</option>
+                  <option value="">{t.toZone}</option>
                   {zoneList.map((zone) => (
                     <option key={zone.id} value={zone.id}>
                       {zone.name}
@@ -786,13 +599,13 @@ export function Farm() {
                   className="input"
                   type="number"
                   min="1"
-                  placeholder={c.quantity}
+                  placeholder={t.quantity}
                   value={transferQty}
                   onChange={(e) => setTransferQty(e.target.value)}
                 />
                 <input
                   className="input"
-                  placeholder={c.reason}
+                  placeholder={t.reason}
                   value={transferNote}
                   onChange={(e) => setTransferNote(e.target.value)}
                 />
@@ -824,28 +637,28 @@ export function Farm() {
                     })
                   }
                 >
-                  {c.transferAction}
+                  {t.farmTransferAction}
                 </button>
               </div>
             )}
           </section>
           <section className="card panel">
             <div className="panel-head">
-              <h3>{c.history}</h3>
+              <h3>{t.farmHistory}</h3>
             </div>
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>{c.history}</th>
-                    <th>{c.quantity}</th>
-                    <th>{c.reason}</th>
+                    <th>{t.farmHistory}</th>
+                    <th>{t.quantity}</th>
+                    <th>{t.reason}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(movements.data ?? []).map((movement) => (
                     <tr key={movement.id}>
-                      <td>{l[movement.kind]}</td>
+                      <td>{t[MOVEMENT_KIND_KEY[movement.kind]]}</td>
                       <td>{movement.quantity}</td>
                       <td>{movement.note}</td>
                     </tr>
@@ -853,7 +666,7 @@ export function Farm() {
                 </tbody>
               </table>
             </div>
-            {movements.data?.length === 0 && <span className="hint">{c.empty}</span>}
+            {movements.data?.length === 0 && <span className="hint">{t.noMovementsYet}</span>}
           </section>
         </>
       )}

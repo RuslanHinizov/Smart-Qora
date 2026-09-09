@@ -2,85 +2,21 @@ import { useState } from "react";
 import { useFarmZones, useInventory, useSystemStatus, useStatsToday } from "../api/queries";
 import type { AnimalSpecies, InventoryHealth, ZoneKind } from "../api/types";
 import { CameraView } from "../components/CameraView";
+import type { TranslationKey } from "../i18n/translations";
 import { useLanguage } from "../i18n/useLanguage";
 import { statusLabel } from "../lib/format";
 
 const TYPES: AnimalSpecies[] = ["sheep", "cattle", "goat", "horse"];
 const META = { sheep: "🐑", cattle: "🐄", goat: "🐐", horse: "🐎" } as const;
-const names = {
-  tr: {
-    all: "Tümü",
-    inPen: "Qorada",
-    outside: "Dışarıda / merada",
-    herdNow: "Hayvanların şu anki yeri",
-    inventory: "Kayıtlı envanter",
-    camera: "Canlı kamera",
-    movement: "Bugünkü hareket",
-    entered: "Giriş",
-    exited: "Çıkış",
-    locations: "Hayvanlar nerede?",
-    recent: "Son hareketler",
-    empty: "Henüz hareket yok",
-    animals: { sheep: "Koyun", cattle: "İnek", goat: "Keçi", horse: "At" },
-    inventoryMismatch: "Bir kapı geçişi envanteri güncelleyemedi — kaynak bölgede yeterli hayvan kaydı yok. Fiziksel sayım gerekli.",
-    inventoryUnconfigured: "Bir kapı geçişi hiçbir hayvan grubuna bağlanamadı. Çiftlik sayfasından grupları kontrol edin.",
-  },
-  ru: {
-    all: "Все",
-    inPen: "В загоне",
-    outside: "Снаружи / на пастбище",
-    herdNow: "Где животные сейчас",
-    inventory: "Учётный остаток",
-    camera: "Камера в реальном времени",
-    movement: "Движения сегодня",
-    entered: "Вход",
-    exited: "Выход",
-    locations: "Где животные?",
-    recent: "Последние перемещения",
-    empty: "Перемещений пока нет",
-    animals: { sheep: "Овцы", cattle: "КРС", goat: "Козы", horse: "Лошади" },
-    inventoryMismatch: "Проход через ворота не обновил учётный остаток — в исходной зоне недостаточно животных. Нужна физическая сверка.",
-    inventoryUnconfigured: "Проход через ворота не привязан к группе животных. Проверьте группы на странице «Ферма».",
-  },
-  kk: {
-    all: "Барлығы",
-    inPen: "Қорада",
-    outside: "Сыртта / жайылымда",
-    herdNow: "Мал қазір қайда",
-    inventory: "Есептегі мал",
-    camera: "Тікелей камера",
-    movement: "Бүгінгі қозғалыс",
-    entered: "Кіру",
-    exited: "Шығу",
-    locations: "Мал қайда?",
-    recent: "Соңғы қозғалыстар",
-    empty: "Әзірге қозғалыс жоқ",
-    animals: { sheep: "Қой", cattle: "Ірі қара", goat: "Ешкі", horse: "Жылқы" },
-    inventoryMismatch: "Қақпадан өту есептегі қалдықты жаңарта алмады — көзі аймақта мал жеткіліксіз. Физикалық тексеру керек.",
-    inventoryUnconfigured: "Қақпадан өту ешбір мал тобына байланыстырылмады. «Ферма» бетінде топтарды тексеріңіз.",
-  },
-  en: {
-    all: "All",
-    inPen: "In the pen",
-    outside: "Outside / pasture",
-    herdNow: "Where animals are now",
-    inventory: "Recorded inventory",
-    camera: "Live camera",
-    movement: "Today's movement",
-    entered: "Entered",
-    exited: "Exited",
-    locations: "Where are the animals?",
-    recent: "Recent movements",
-    empty: "No movements yet",
-    animals: { sheep: "Sheep", cattle: "Cattle", goat: "Goats", horse: "Horses" },
-    inventoryMismatch: "A gate crossing could not update the inventory — the source zone does not have enough animals recorded. Physical verification needed.",
-    inventoryUnconfigured: "A gate crossing is not linked to any animal group. Check the groups on the Farm page.",
-  },
-} as const;
+const SPECIES_KEY: Record<AnimalSpecies, TranslationKey> = {
+  sheep: "speciesSheep",
+  cattle: "speciesCattle",
+  goat: "speciesGoat",
+  horse: "speciesHorse",
+};
 
 export function Dashboard() {
-  const { language, t } = useLanguage();
-  const c = names[language];
+  const { t } = useLanguage();
   const status = useSystemStatus();
   const stats = useStatsToday();
   const inventory = useInventory();
@@ -116,13 +52,13 @@ export function Dashboard() {
       {inventoryHealth !== "ok" && (
         <div className="card banner warn">
           <span className="dot" />
-          {inventoryHealth === "mismatch" ? c.inventoryMismatch : c.inventoryUnconfigured}
+          {inventoryHealth === "mismatch" ? t.inventoryMismatchAlert : t.inventoryUnconfiguredAlert}
         </div>
       )}
       <nav className="animal-filters">
         <button className={!selected ? "active" : ""} onClick={() => setSelected(null)}>
           <span>✦</span>
-          <strong>{c.all}</strong>
+          <strong>{t.all}</strong>
           <small>{inPen}</small>
         </button>
         {TYPES.map((type) => (
@@ -132,7 +68,7 @@ export function Dashboard() {
             onClick={() => setSelected(type)}
           >
             <span>{META[type]}</span>
-            <strong>{c.animals[type]}</strong>
+            <strong>{t[SPECIES_KEY[type]]}</strong>
             <small>{byType[type]}</small>
           </button>
         ))}
@@ -141,8 +77,8 @@ export function Dashboard() {
         <article className="card panel live-panel">
           <div className="panel-head">
             <div>
-              <span className="section-title">{c.camera}</span>
-              <h3>{cameraOnline ? c.camera : statusLabel(t, status.data?.camera ?? "OFFLINE")}</h3>
+              <span className="section-title">{t.liveCamera}</span>
+              <h3>{cameraOnline ? t.liveCamera : statusLabel(t, status.data?.camera ?? "OFFLINE")}</h3>
             </div>
             <span className={`badge ${cameraOnline ? "" : "off"}`}>
               <span className="dot" />
@@ -153,23 +89,23 @@ export function Dashboard() {
         </article>
         <div className="dashboard-side">
           <article className="card panel">
-            <span className="section-title">{c.movement}</span>
+            <span className="section-title">{t.todaysMovement}</span>
             <div className="movement-numbers">
               <div>
                 <span className="in-dot">↓</span>
                 <strong>{totals.total_in}</strong>
-                <small>{c.entered}</small>
+                <small>{t.dashboardEntered}</small>
               </div>
               <div>
                 <span className="out-dot">↑</span>
                 <strong>{totals.total_out}</strong>
-                <small>{c.exited}</small>
+                <small>{t.dashboardExited}</small>
               </div>
             </div>
           </article>
           <article className="card panel">
             <div className="panel-head">
-              <h3>{c.locations}</h3>
+              <h3>{t.whereAreAnimals}</h3>
             </div>
             {visibleRows.length ? (
               <div className="location-list">
@@ -185,7 +121,7 @@ export function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="hint">{c.empty}</p>
+              <p className="hint">{t.noMovementsYet}</p>
             )}
           </article>
         </div>
@@ -193,8 +129,8 @@ export function Dashboard() {
       <section className="card panel herd-now">
         <div className="panel-head">
           <div>
-            <span className="section-title">{c.inventory}</span>
-            <h3>{c.herdNow}</h3>
+            <span className="section-title">{t.recordedInventory}</span>
+            <h3>{t.dashboardHerdNow}</h3>
           </div>
           <strong className="herd-total">{total}</strong>
         </div>
@@ -202,14 +138,14 @@ export function Dashboard() {
           <div className="herd-place inside">
             <span className="herd-place-icon">⌂</span>
             <div>
-              <small>{c.inPen}</small>
+              <small>{t.dashboardInPen}</small>
               <strong>{inPen}</strong>
             </div>
           </div>
           <div className="herd-place outside">
             <span className="herd-place-icon">☀</span>
             <div>
-              <small>{c.outside}</small>
+              <small>{t.dashboardOutside}</small>
               <strong>{outside}</strong>
             </div>
           </div>
@@ -217,7 +153,7 @@ export function Dashboard() {
             {TYPES.map((type) => (
               <div key={type} className={selected === type ? "selected" : ""}>
                 <span>{META[type]}</span>
-                <small>{c.animals[type]}</small>
+                <small>{t[SPECIES_KEY[type]]}</small>
                 <strong>{byType[type]}</strong>
               </div>
             ))}
