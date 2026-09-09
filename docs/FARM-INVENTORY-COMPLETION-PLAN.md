@@ -11,8 +11,8 @@ testler, uçtan uca doğrulama) eksik. Ek olarak, uygulanan kısımda envanteri
 
 Toplam commit'lenmemiş iş: 21 dosya, ~978 satır ekleme.
 
-> **Durum (bu oturumda):** Faz 0 ve Faz 1 tamamlandı ve commit'lendi
-> (`ac26f24`, `1221cd7`). Faz 2'den itibaren henüz başlanmadı.
+> **Durum (bu oturumda):** Faz 0, Faz 1 ve Faz 2 tamamlandı ve commit'lendi.
+> Faz 3'ten itibaren henüz başlanmadı.
 
 ---
 
@@ -170,9 +170,9 @@ yeni satır yok.
 
 ---
 
-## Faz 2 — Plandaki eksik işlevler
+## Faz 2 — Plandaki eksik işlevler ✅ tamamlandı (`70e6fca`, `d340b23`, `db18322`, `2b5b56c`)
 
-### 2.1 · `POST /api/inventory/transfer` arayüzde yok
+### 2.1 · `POST /api/inventory/transfer` arayüzde yok ✅ (`db18322`)
 
 Backend uç noktası, şeması ve testi var; frontend'de **hiç** kullanılmıyor.
 `useFarmMutations` yalnızca `createZone / createGroup / initialise / reconcile`
@@ -186,7 +186,7 @@ Aynı yerde eksik olan diğer mutation'lar: `PUT /farm/zones/{id}` ve
 `PUT /farm/groups/{id}` de arayüzde yok (bölge/grup adı düzeltilemiyor,
 pasife alınamıyor). `updateZone` / `updateGroup` ekle.
 
-### 2.2 · Tür → grup çakışması sessizce envanteri durduruyor
+### 2.2 · Tür → grup çakışması sessizce envanteri durduruyor ✅ B uygulandı (`70e6fca`)
 
 **Sorun.** `group_for_detection`, aynı türde **tam olarak bir** aktif grup
 varsa onu döndürüyor; 2+ varsa `None`. Yani yönetici "Koyun" ve "Kuzu"
@@ -214,7 +214,7 @@ yazılmalı.
 
 Her iki durumda da 1.4'teki `inventory_unconfigured` alarmı devreye girmeli.
 
-### 2.3 · Telegram envanteri hiç bilmiyor
+### 2.3 · Telegram envanteri hiç bilmiyor ✅ (`2b5b56c`)
 
 `/status`, `/today`, günlük özet — hepsi yalnızca kapı sayacını gösteriyor.
 Yönetici Telegram'dan "hangi bölgede kaç hayvan var" göremiyor.
@@ -224,7 +224,7 @@ Yönetici Telegram'dan "hangi bölgede kaç hayvan var" göremiyor.
 özete (`DIGEST`) bölge dökümü ekle. `commands.py` ve `notifications.py`
 zaten 4 dilli sözlük düzenine sahip; aynı deseni izle.
 
-### 2.4 · Temiz kurulumda çiftlik boş başlıyor
+### 2.4 · Temiz kurulumda çiftlik boş başlıyor ✅ (`d340b23`)
 
 `db/seed.py` yalnızca admin ve varsayılan kamerayı oluşturuyor. Orijinal
 planın 1. adımı "migrasyon, modeller ve **başlangıç verileri**" diyordu.
