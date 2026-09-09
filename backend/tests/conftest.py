@@ -17,6 +17,12 @@ os.environ["ADMIN_USERNAME"] = "admin"
 os.environ["ADMIN_PASSWORD"] = "test-admin-pw"
 os.environ["CORS_ORIGINS"] = ""
 os.environ.setdefault("ALLOWED_CLASSES", "sheep,cattle,goat,horse")
+# Worker-behaviour switches must not leak in from an ambient backend/.env — tests
+# set their own explicit values via monkeypatch when they need something else.
+os.environ["VIDEO_LOOP"] = "true"
+os.environ["VIDEO_LOOP_RESET"] = "false"
+os.environ["NON_LIVESTOCK_GUARD"] = "false"
+os.environ["TRACKER"] = "botsort.yaml"
 
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
@@ -50,10 +56,15 @@ from app.main import app  # noqa: E402
 @pytest_asyncio.fixture
 async def clean_db():
     async with SessionLocal() as db:
+        await db.execute(text("DELETE FROM inventory_reconciliations"))
+        await db.execute(text("DELETE FROM inventory_movements"))
+        await db.execute(text("DELETE FROM inventory_balances"))
         await db.execute(text("DELETE FROM animal_events"))
         await db.execute(text("DELETE FROM recording_progress"))
         await db.execute(text("DELETE FROM daily_statistics"))
         await db.execute(text("DELETE FROM cameras"))
+        await db.execute(text("DELETE FROM farm_zones"))
+        await db.execute(text("DELETE FROM animal_groups"))
         await db.execute(text("UPDATE herd_state SET current_inside = 0, baseline = 0"))
         await db.execute(text("UPDATE app_settings SET default_language = 'ru', telegram_bot_token = '', telegram_chat_id = ''"))
         await db.execute(text("UPDATE app_settings SET default_confidence = NULL, default_iou = NULL, default_frame_skip = NULL, stream_fps = NULL"))
