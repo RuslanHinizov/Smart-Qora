@@ -135,9 +135,29 @@ export function useFarmMutations() {
         apiFetch<FarmZone>("/farm/zones", { body: input }),
       onSuccess: invalidate,
     }),
+    updateZone: useMutation({
+      mutationFn: ({ id, input }: { id: number; input: Omit<FarmZone, "id" | "created_at"> }) =>
+        apiFetch<FarmZone>(`/farm/zones/${id}`, { method: "PUT", body: input }),
+      onSuccess: invalidate,
+    }),
     createGroup: useMutation({
       mutationFn: (input: Omit<AnimalGroup, "id" | "created_at">) =>
         apiFetch<AnimalGroup>("/farm/groups", { body: input }),
+      onSuccess: invalidate,
+    }),
+    updateGroup: useMutation({
+      mutationFn: ({ id, input }: { id: number; input: Omit<AnimalGroup, "id" | "created_at"> }) =>
+        apiFetch<AnimalGroup>(`/farm/groups/${id}`, { method: "PUT", body: input }),
+      onSuccess: invalidate,
+    }),
+    transfer: useMutation({
+      mutationFn: (input: {
+        group_id: number;
+        from_zone_id?: number | null;
+        to_zone_id?: number | null;
+        quantity: number;
+        note: string;
+      }) => apiFetch<InventoryMovement>("/inventory/transfer", { body: input }),
       onSuccess: invalidate,
     }),
     initialise: useMutation({

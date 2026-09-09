@@ -789,7 +789,7 @@ table.data tr:last-child td {
 }
 .farm-list > div {
   display: grid;
-  grid-template-columns: 12px 1fr auto auto;
+  grid-template-columns: 12px 1fr auto auto auto;
   align-items: center;
   gap: 9px;
   padding: 9px 0;
@@ -797,6 +797,15 @@ table.data tr:last-child td {
 }
 .farm-list > div:last-child {
   border-bottom: 0;
+}
+.farm-list > div.farm-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.farm-edit-row .input {
+  flex: 1 1 140px;
 }
 .farm-list small {
   color: var(--c-text-muted);
@@ -840,6 +849,12 @@ table.data tr:last-child td {
 }
 .farm-initial {
   max-width: 900px;
+}
+.farm-transfer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(90px, 110px) minmax(150px, 1.4fr) auto;
+  gap: var(--sp-2);
+  align-items: center;
 }
 .farm-quantity-grid,
 .farm-balance-grid {

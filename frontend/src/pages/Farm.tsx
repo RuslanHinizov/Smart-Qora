@@ -6,7 +6,7 @@ import {
   useInventory,
   useInventoryMovements,
 } from "../api/queries";
-import type { AnimalSpecies, ZoneKind } from "../api/types";
+import type { AnimalGroup, AnimalSpecies, FarmZone, ZoneKind } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { Icon } from "../components/Icon";
 import { useLanguage } from "../i18n/useLanguage";
@@ -41,6 +41,13 @@ const copy = {
     quantity: "Adet",
     reason: "Not / neden",
     setupError: "Kaydedilemedi. Aynı isimde bir kayıt olabilir.",
+    transferTitle: "Bölgeler arası aktarım",
+    transferHint: "Bir grubu bir bölgeden diğerine elle taşı. Neden zorunludur.",
+    from: "Kaynak bölge",
+    to: "Hedef bölge",
+    transferAction: "Aktar",
+    active: "Aktif",
+    inactive: "Pasif",
   },
   ru: {
     title: "Настройте ферму",
@@ -71,6 +78,13 @@ const copy = {
     quantity: "Количество",
     reason: "Примечание / причина",
     setupError: "Не удалось сохранить. Возможно, такое название уже есть.",
+    transferTitle: "Перемещение между зонами",
+    transferHint: "Вручную переместите группу из одной зоны в другую. Причина обязательна.",
+    from: "Из зоны",
+    to: "В зону",
+    transferAction: "Переместить",
+    active: "Активна",
+    inactive: "Неактивна",
   },
   kk: {
     title: "Ферманы баптаңыз",
@@ -101,6 +115,13 @@ const copy = {
     quantity: "Саны",
     reason: "Ескерту / себеп",
     setupError: "Сақталмады. Осындай атау бар болуы мүмкін.",
+    transferTitle: "Аймақтар арасында ауыстыру",
+    transferHint: "Топты бір аймақтан екіншісіне қолмен ауыстырыңыз. Себеп міндетті.",
+    from: "Қайдан",
+    to: "Қайда",
+    transferAction: "Ауыстыру",
+    active: "Белсенді",
+    inactive: "Белсенді емес",
   },
   en: {
     title: "Set up your farm",
@@ -131,6 +152,13 @@ const copy = {
     quantity: "Quantity",
     reason: "Note / reason",
     setupError: "Could not save. A record with this name may already exist.",
+    transferTitle: "Transfer between zones",
+    transferHint: "Manually move a group from one zone to another. A reason is required.",
+    from: "From zone",
+    to: "To zone",
+    transferAction: "Transfer",
+    active: "Active",
+    inactive: "Inactive",
   },
 } as const;
 
@@ -204,12 +232,20 @@ export function Farm() {
   const groups = useAnimalGroups();
   const inventory = useInventory();
   const movements = useInventoryMovements();
-  const { createZone, createGroup, initialise, reconcile } = useFarmMutations();
+  const { createZone, updateZone, createGroup, updateGroup, transfer, initialise, reconcile } =
+    useFarmMutations();
   const [zoneName, setZoneName] = useState("");
   const [zoneKind, setZoneKind] = useState<ZoneKind>("PEN");
   const [groupName, setGroupName] = useState("");
   const [groupSpecies, setGroupSpecies] = useState<AnimalSpecies>("sheep");
   const [groupDefault, setGroupDefault] = useState(false);
+  const [editingZone, setEditingZone] = useState<{ id: number; draft: FarmZone } | null>(null);
+  const [editingGroup, setEditingGroup] = useState<{ id: number; draft: AnimalGroup } | null>(null);
+  const [transferGroup, setTransferGroup] = useState("");
+  const [transferFrom, setTransferFrom] = useState("");
+  const [transferTo, setTransferTo] = useState("");
+  const [transferQty, setTransferQty] = useState("");
+  const [transferNote, setTransferNote] = useState("");
   const [startZone, setStartZone] = useState("");
   const [quantities, setQuantities] = useState<Record<number, string>>({});
   const [physical, setPhysical] = useState<Record<string, string>>({});
@@ -295,13 +331,74 @@ export function Farm() {
           </div>
           {zoneList.length ? (
             <div className="farm-list">
-              {zoneList.map((zone) => (
-                <div key={zone.id}>
-                  <span className="farm-dot" />
-                  <strong>{zone.name}</strong>
-                  <small>{l[zone.kind]}</small>
-                </div>
-              ))}
+              {zoneList.map((zone) =>
+                editingZone?.id === zone.id ? (
+                  <div key={zone.id} className="farm-edit-row">
+                    <input
+                      className="input"
+                      value={editingZone.draft.name}
+                      onChange={(e) =>
+                        setEditingZone({ id: zone.id, draft: { ...editingZone.draft, name: e.target.value } })
+                      }
+                    />
+                    <select
+                      className="select"
+                      value={editingZone.draft.kind}
+                      onChange={(e) =>
+                        setEditingZone({
+                          id: zone.id,
+                          draft: { ...editingZone.draft, kind: e.target.value as ZoneKind },
+                        })
+                      }
+                    >
+                      {kinds.map((kind) => (
+                        <option key={kind} value={kind}>
+                          {l[kind]}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="farm-add-check">
+                      <input
+                        type="checkbox"
+                        checked={editingZone.draft.is_active}
+                        onChange={(e) =>
+                          setEditingZone({
+                            id: zone.id,
+                            draft: { ...editingZone.draft, is_active: e.target.checked },
+                          })
+                        }
+                      />
+                      {c.active}
+                    </label>
+                    <button
+                      className="btn sm primary"
+                      disabled={!editingZone.draft.name || updateZone.isPending}
+                      onClick={() =>
+                        submit(async () => {
+                          await updateZone.mutateAsync({ id: zone.id, input: editingZone.draft });
+                          setEditingZone(null);
+                        })
+                      }
+                    >
+                      {t.save}
+                    </button>
+                    <button className="btn sm ghost" onClick={() => setEditingZone(null)}>
+                      {t.cancel}
+                    </button>
+                  </div>
+                ) : (
+                  <div key={zone.id}>
+                    <span className="farm-dot" />
+                    <strong>{zone.name}</strong>
+                    <small>{zone.is_active ? l[zone.kind] : `${l[zone.kind]} · ${c.inactive}`}</small>
+                    {isAdmin && (
+                      <button className="btn sm ghost" onClick={() => setEditingZone({ id: zone.id, draft: zone })}>
+                        {t.edit}
+                      </button>
+                    )}
+                  </div>
+                ),
+              )}
             </div>
           ) : (
             <p className="hint">{c.noAreas}</p>
@@ -357,14 +454,94 @@ export function Farm() {
           </div>
           {groupList.length ? (
             <div className="farm-list">
-              {groupList.map((group) => (
-                <div key={group.id}>
-                  <span className="farm-dot animal" />
-                  <strong>{group.name}</strong>
-                  <small>{l[group.species]}</small>
-                  {group.is_default_for_species && <span className="pill">{c.defaultBadge}</span>}
-                </div>
-              ))}
+              {groupList.map((group) =>
+                editingGroup?.id === group.id ? (
+                  <div key={group.id} className="farm-edit-row">
+                    <input
+                      className="input"
+                      value={editingGroup.draft.name}
+                      onChange={(e) =>
+                        setEditingGroup({
+                          id: group.id,
+                          draft: { ...editingGroup.draft, name: e.target.value },
+                        })
+                      }
+                    />
+                    <select
+                      className="select"
+                      value={editingGroup.draft.species}
+                      onChange={(e) =>
+                        setEditingGroup({
+                          id: group.id,
+                          draft: { ...editingGroup.draft, species: e.target.value as AnimalSpecies },
+                        })
+                      }
+                    >
+                      {species.map((type) => (
+                        <option key={type} value={type}>
+                          {l[type]}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="farm-add-check">
+                      <input
+                        type="checkbox"
+                        checked={editingGroup.draft.is_default_for_species}
+                        onChange={(e) =>
+                          setEditingGroup({
+                            id: group.id,
+                            draft: { ...editingGroup.draft, is_default_for_species: e.target.checked },
+                          })
+                        }
+                      />
+                      {c.defaultForSpecies}
+                    </label>
+                    <label className="farm-add-check">
+                      <input
+                        type="checkbox"
+                        checked={editingGroup.draft.is_active}
+                        onChange={(e) =>
+                          setEditingGroup({
+                            id: group.id,
+                            draft: { ...editingGroup.draft, is_active: e.target.checked },
+                          })
+                        }
+                      />
+                      {c.active}
+                    </label>
+                    <button
+                      className="btn sm primary"
+                      disabled={!editingGroup.draft.name || updateGroup.isPending}
+                      onClick={() =>
+                        submit(async () => {
+                          await updateGroup.mutateAsync({ id: group.id, input: editingGroup.draft });
+                          setEditingGroup(null);
+                        })
+                      }
+                    >
+                      {t.save}
+                    </button>
+                    <button className="btn sm ghost" onClick={() => setEditingGroup(null)}>
+                      {t.cancel}
+                    </button>
+                  </div>
+                ) : (
+                  <div key={group.id}>
+                    <span className="farm-dot animal" />
+                    <strong>{group.name}</strong>
+                    <small>{group.is_active ? l[group.species] : `${l[group.species]} · ${c.inactive}`}</small>
+                    {group.is_default_for_species && <span className="pill">{c.defaultBadge}</span>}
+                    {isAdmin && (
+                      <button
+                        className="btn sm ghost"
+                        onClick={() => setEditingGroup({ id: group.id, draft: group })}
+                      >
+                        {t.edit}
+                      </button>
+                    )}
+                  </div>
+                ),
+              )}
             </div>
           ) : (
             <p className="hint">{c.noGroups}</p>
@@ -573,6 +750,84 @@ export function Farm() {
                 </tbody>
               </table>
             </div>
+          </section>
+          <section className="card panel">
+            <div className="panel-head">
+              <h3>{c.transferTitle}</h3>
+            </div>
+            <p className="hint">{c.transferHint}</p>
+            {isAdmin && (
+              <div className="farm-transfer-grid">
+                <select className="select" value={transferGroup} onChange={(e) => setTransferGroup(e.target.value)}>
+                  <option value="">{c.step2}</option>
+                  {groupList.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+                <select className="select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
+                  <option value="">{c.from}</option>
+                  {zoneList.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </option>
+                  ))}
+                </select>
+                <select className="select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                  <option value="">{c.to}</option>
+                  {zoneList.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="input"
+                  type="number"
+                  min="1"
+                  placeholder={c.quantity}
+                  value={transferQty}
+                  onChange={(e) => setTransferQty(e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder={c.reason}
+                  value={transferNote}
+                  onChange={(e) => setTransferNote(e.target.value)}
+                />
+                <button
+                  className="btn primary"
+                  disabled={
+                    !transferGroup ||
+                    (!transferFrom && !transferTo) ||
+                    (transferFrom !== "" && transferFrom === transferTo) ||
+                    !transferQty ||
+                    Number(transferQty) <= 0 ||
+                    transferNote.trim().length < 3 ||
+                    transfer.isPending
+                  }
+                  onClick={() =>
+                    submit(async () => {
+                      await transfer.mutateAsync({
+                        group_id: Number(transferGroup),
+                        from_zone_id: transferFrom ? Number(transferFrom) : null,
+                        to_zone_id: transferTo ? Number(transferTo) : null,
+                        quantity: Number(transferQty),
+                        note: transferNote,
+                      });
+                      setTransferGroup("");
+                      setTransferFrom("");
+                      setTransferTo("");
+                      setTransferQty("");
+                      setTransferNote("");
+                    })
+                  }
+                >
+                  {c.transferAction}
+                </button>
+              </div>
+            )}
           </section>
           <section className="card panel">
             <div className="panel-head">
