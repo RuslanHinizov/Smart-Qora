@@ -11,8 +11,8 @@ testler, uçtan uca doğrulama) eksik. Ek olarak, uygulanan kısımda envanteri
 
 Toplam commit'lenmemiş iş: 21 dosya, ~978 satır ekleme.
 
-> **Durum (bu oturumda):** Faz 0, Faz 1 ve Faz 2 tamamlandı ve commit'lendi.
-> Faz 3'ten itibaren henüz başlanmadı.
+> **Durum (bu oturumda):** Faz 0, Faz 1, Faz 2 ve Faz 3 tamamlandı ve
+> commit'lendi. Faz 4'ten itibaren henüz başlanmadı.
 
 ---
 
@@ -243,7 +243,7 @@ girer. Bu, Farm.tsx'teki "hızlı kurulum" butonlarının işini de sadeleştiri
 
 ---
 
-## Faz 3 — i18n'i tek çatı altına al
+## Faz 3 — i18n'i tek çatı altına al ✅ tamamlandı (`b78b2fb`)
 
 Bu, koddaki en görünür tutarsızlık. Proje `i18n/translations.ts` +
 `translations.test.ts` (diller arası anahtar eşitliği testi) üzerine kurulu,
@@ -413,5 +413,5 @@ Bu plandan eklenenler:
 
 - [x] Temiz kurulumda ilk `IN` geçişi envanteri artırır *(1.1)*
 - [x] Envanter kopukluğu sessiz kalmaz — Telegram + panel *(1.4)*
-- [ ] Dört dilde hiçbir sayfada sabit İngilizce metin kalmaz *(Faz 3)*
+- [x] Dört dilde hiçbir sayfada sabit İngilizce metin kalmaz *(Faz 3)*
 - [x] `backend/.env` içeriği test sonucunu değiştirmez *(0.1)*
