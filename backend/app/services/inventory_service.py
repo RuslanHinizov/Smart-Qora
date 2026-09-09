@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import AnimalGroup, FarmZone, InventoryBalance, InventoryMovement, MovementKind, ZoneKind
@@ -108,3 +108,29 @@ async def group_for_detection(session: AsyncSession, animal_type: str) -> Animal
         return groups[0]
     defaults = [group for group in groups if group.is_default_for_species]
     return defaults[0] if len(defaults) == 1 else None
+
+
+async def zone_group_summary(session: AsyncSession) -> list[tuple[str, str, int]]:
+    """(zone_name, group_name, quantity) for every balance row, in the same
+    order as ``GET /inventory/summary``. Used by the Telegram /envanter
+    command — a coarser per-zone total is ``zone_totals`` below, for the
+    daily digest."""
+    rows = (await session.execute(
+        select(FarmZone.name, AnimalGroup.name, InventoryBalance.quantity)
+        .join(FarmZone, FarmZone.id == InventoryBalance.zone_id)
+        .join(AnimalGroup, AnimalGroup.id == InventoryBalance.group_id)
+        .order_by(FarmZone.sort_order, FarmZone.name, AnimalGroup.sort_order, AnimalGroup.name)
+    )).all()
+    return [(zone_name, group_name, quantity) for zone_name, group_name, quantity in rows]
+
+
+async def zone_totals(session: AsyncSession) -> list[tuple[str, int]]:
+    """(zone_name, total animals across every group) for the Telegram daily
+    digest's zone breakdown. A zone with no balance rows yet is omitted."""
+    rows = (await session.execute(
+        select(FarmZone.name, func.sum(InventoryBalance.quantity))
+        .join(InventoryBalance, InventoryBalance.zone_id == FarmZone.id)
+        .group_by(FarmZone.id, FarmZone.name, FarmZone.sort_order)
+        .order_by(FarmZone.sort_order, FarmZone.name)
+    )).all()
+    return [(name, int(total)) for name, total in rows]

@@ -55,6 +55,13 @@ DIGEST = {
     "tr": "📅 GÜNLÜK ÖZET\n\n🟢 Giren: {total_in}\n🔴 Çıkan: {total_out}\n📊 Ahırda mevcut: {current}",
 }
 
+DIGEST_ZONES_HEADER = {
+    "ru": "📦 По зонам:",
+    "kk": "📦 Аймақтар бойынша:",
+    "en": "📦 By zone:",
+    "tr": "📦 Bölgelere göre:",
+}
+
 
 def _t(table: dict, language: str) -> dict:
     return table.get(language, table["ru"])
@@ -70,8 +77,14 @@ def format_alert(key: str, language: str, **kw) -> str:
     return _t(ALERT, language)[key].format(**kw)
 
 
-def format_digest(total_in: int, total_out: int, current: int, language: str = "ru") -> str:
-    return _t(DIGEST, language).format(total_in=total_in, total_out=total_out, current=current)
+def format_digest(total_in: int, total_out: int, current: int, language: str = "ru",
+                   zone_totals: list[tuple[str, int]] | None = None) -> str:
+    text = _t(DIGEST, language).format(total_in=total_in, total_out=total_out, current=current)
+    if zone_totals:
+        header = _t(DIGEST_ZONES_HEADER, language)
+        lines = "\n".join(f"{name}: {quantity}" for name, quantity in zone_totals)
+        text += f"\n\n{header}\n{lines}"
+    return text
 
 
 @dataclass

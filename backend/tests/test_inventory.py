@@ -145,3 +145,28 @@ async def test_group_default_species_conflict_is_409(client, clean_db, admin_tok
     other = await client.post("/api/farm/groups", headers=headers,
                               json={"name": "Cattle", "species": "cattle", "is_default_for_species": True})
     assert other.status_code == 201, other.text
+
+
+@pytest.mark.asyncio
+async def test_telegram_zone_summaries(session, clean_db):
+    """Faz 2.3 — the queries backing /envanter and the digest's zone breakdown."""
+    from app.db.models import AnimalGroup, FarmZone, InventoryBalance
+    from app.services.inventory_service import zone_group_summary, zone_totals
+
+    pen = FarmZone(name="Main Pen", kind="PEN", sort_order=0)
+    pasture = FarmZone(name="Pasture", kind="PASTURE", sort_order=1)
+    sheep = AnimalGroup(name="Sheep", species="sheep", sort_order=0)
+    cattle = AnimalGroup(name="Cattle", species="cattle", sort_order=1)
+    session.add_all([pen, pasture, sheep, cattle])
+    await session.flush()
+    session.add_all([
+        InventoryBalance(zone_id=pen.id, group_id=sheep.id, quantity=40),
+        InventoryBalance(zone_id=pen.id, group_id=cattle.id, quantity=10),
+        InventoryBalance(zone_id=pasture.id, group_id=sheep.id, quantity=3),
+    ])
+    await session.commit()
+
+    assert await zone_group_summary(session) == [
+        ("Main Pen", "Sheep", 40), ("Main Pen", "Cattle", 10), ("Pasture", "Sheep", 3),
+    ]
+    assert await zone_totals(session) == [("Main Pen", 50), ("Pasture", 3)]

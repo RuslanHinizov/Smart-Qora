@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 
 from app.db.database import SessionLocal
 from app.db.models import AnimalEvent, AppSettings
+from app.services.inventory_service import zone_totals
 from app.services.statistics_service import today_totals
 from app.core.calendar import site_now
 from app.telegram.notifications import format_alert, format_digest
@@ -77,8 +78,9 @@ async def digest_loop(app, interval: float = 60.0) -> None:
                 if now.hour != hour or now.date() == sent_on:
                     continue
                 totals = await today_totals(session)
+                zones = await zone_totals(session)
             sent_on = now.date()
             await notifier.alert(lambda l: format_digest(
-                totals["total_in"], totals["total_out"], totals["current"], l))
+                totals["total_in"], totals["total_out"], totals["current"], l, zones))
         except Exception:  # noqa: BLE001
             logger.exception("digest_loop_iteration_failed")

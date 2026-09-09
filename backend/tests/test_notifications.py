@@ -18,6 +18,18 @@ def test_alert_and_digest_localised():
     assert "Giren: 7" in format_digest(7, 2, 5, "tr")
 
 
+def test_digest_zone_breakdown_is_optional_and_appended_when_given():
+    """Faz 2.3 — the digest must be byte-identical to before when no zone
+    breakdown is passed (existing scheduled digests keep working)."""
+    without = format_digest(7, 2, 5, "en")
+    assert "By zone" not in without
+
+    with_zones = format_digest(7, 2, 5, "en", zone_totals=[("Main Pen", 40), ("Pasture", 12)])
+    assert with_zones.startswith(without)
+    assert "By zone" in with_zones
+    assert "Main Pen: 40" in with_zones and "Pasture: 12" in with_zones
+
+
 def test_aggregation_combines_same_direction():
     async def scenario():
         flushes = []

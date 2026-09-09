@@ -135,7 +135,7 @@ def test_build_handlers_covers_expected_commands():
     from app.telegram.commands import build_handlers
 
     commands = {c for handler in build_handlers(SessionLocal, _status) for c in handler.commands}
-    assert {"start", "help", "status", "today", "week", "photo", "dil"} <= commands
+    assert {"start", "help", "status", "today", "week", "envanter", "photo", "dil"} <= commands
 
 
 @pytest.mark.asyncio
@@ -176,3 +176,34 @@ async def test_command_bot_start_is_noop_without_token():
     bot = CommandBot()
     await bot.start("", SessionLocal, _status)  # must not raise, must not create an Application
     await bot.stop()
+
+
+@pytest.mark.asyncio
+async def test_envanter_command_reports_empty_state(clean_db):
+    """Faz 2.3 — a fresh box with no zones/groups gives a clear empty reply,
+    not a crash or a blank message. A dedicated chat id avoids inheriting the
+    'tr' language another test in this module persists for chat 42."""
+    await _set_authorized("555")
+    update = _FakeUpdate(chat_id="555")
+    await _handler("envanter").callback(update, _Ctx())
+    assert update.message.replies and "не настроены" in update.message.replies[0]  # default language is ru
+
+
+@pytest.mark.asyncio
+async def test_envanter_command_lists_zone_and_group_balances(clean_db):
+    from app.db.models import AnimalGroup, FarmZone, InventoryBalance
+
+    await _set_authorized("556")
+    async with SessionLocal() as db:
+        pen = FarmZone(name="Main Pen", kind="PEN")
+        sheep = AnimalGroup(name="Sheep", species="sheep")
+        db.add_all([pen, sheep])
+        await db.flush()
+        db.add(InventoryBalance(zone_id=pen.id, group_id=sheep.id, quantity=47))
+        await db.commit()
+
+    update = _FakeUpdate(chat_id="556")
+    await _handler("envanter").callback(update, _Ctx())
+    assert update.message.replies
+    reply = update.message.replies[0]
+    assert "Main Pen" in reply and "Sheep" in reply and "47" in reply

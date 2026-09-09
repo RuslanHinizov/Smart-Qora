@@ -128,8 +128,8 @@ revoke it with BotFather and save the replacement in Settings.
 |---|---|
 | Crossing alerts | `🐄 ENTERED …` — a burst is grouped over `TELEGRAM_AGGREGATION_SECONDS` |
 | Daily summary | set an hour (0–23, container `TZ`) on the Settings page; blank = off |
-| Fault alerts | AI worker stopped / camera offline / recovered; optional "no crossings for N hours" |
-| Commands | `/status` `/today` `/week` `/photo` (annotated snapshot) `/dil ru\|kk\|en\|tr` `/help` |
+| Fault alerts | AI worker stopped / camera offline / recovered; optional "no crossings for N hours"; a crossing that could not update the farm inventory (rate-limited to one alert per 15 min) |
+| Commands | `/status` `/today` `/week` `/envanter` (inventory by zone) `/photo` (annotated snapshot) `/dil ru\|kk\|en\|tr` `/help` |
 | Language | defaults to Russian; each chat sets its own with `/dil` |
 
 ---
