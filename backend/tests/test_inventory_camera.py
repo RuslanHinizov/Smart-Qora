@@ -140,3 +140,24 @@ async def test_inventory_mismatch_sends_one_rate_limited_telegram_alert(monkeypa
     mismatch_alerts = [text for _, text in sent if "Physical verification" in text]
     assert len(mismatch_alerts) == 1
     assert "'Outside'" in mismatch_alerts[0]
+
+
+@pytest.mark.asyncio
+async def test_default_group_resolves_a_species_shared_by_two_groups(monkeypatch, clean_db):
+    """Faz 2.2 — 'Sheep' and 'Lambs' both have species=sheep; without a marked
+    default the crossing would be unconfigured (see the previous test)."""
+    pen_id, outside_id, adults_group_id = await _farm()
+    async with SessionLocal() as db:
+        db.add(AnimalGroup(name="Lambs", species="sheep", is_default_for_species=True))
+        await db.commit()
+    await _camera_with_zones(pen_id, outside_id)
+    service = cs.CountingService(get_settings())
+    _install_fakes(monkeypatch, straight_crossing_script(track_id=1, cls_index=0))
+    await service.run()
+
+    async with SessionLocal() as db:
+        movement = (await db.scalars(select(InventoryMovement))).one()
+        lambs_id = await db.scalar(select(AnimalGroup.id).where(AnimalGroup.name == "Lambs"))
+        assert movement.group_id == lambs_id
+        assert movement.group_id != adults_group_id  # the non-default group was not picked
+    assert service.inventory_health == "ok"

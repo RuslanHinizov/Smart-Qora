@@ -103,3 +103,45 @@ async def test_apply_movement_is_idempotent_per_source_event(session, clean_db):
     assert len(movements) == 1
     balance = await session.get(InventoryBalance, (pen.id, group.id))
     assert balance.quantity == 1  # the retry did not double-apply
+
+
+@pytest.mark.asyncio
+async def test_group_for_detection_resolution(session, clean_db):
+    """Faz 2.2 — a species with two active groups (e.g. 'Sheep' and 'Lambs')
+    is ambiguous unless one of them is marked as that species' default."""
+    from app.db.models import AnimalGroup
+    from app.services.inventory_service import group_for_detection
+
+    assert await group_for_detection(session, "sheep") is None  # no group at all
+
+    sheep = AnimalGroup(name="Sheep", species="sheep")
+    session.add(sheep)
+    await session.flush()
+    assert (await group_for_detection(session, "sheep")).id == sheep.id  # sole active group
+
+    lambs = AnimalGroup(name="Lambs", species="sheep")
+    session.add(lambs)
+    await session.flush()
+    assert await group_for_detection(session, "sheep") is None  # now ambiguous
+
+    lambs.is_default_for_species = True
+    await session.flush()
+    assert (await group_for_detection(session, "sheep")).id == lambs.id  # default breaks the tie
+
+
+@pytest.mark.asyncio
+async def test_group_default_species_conflict_is_409(client, clean_db, admin_token, auth):
+    headers = auth(admin_token)
+    await _group(client, headers, "Sheep", "sheep")
+    default = await client.post("/api/farm/groups", headers=headers,
+                                json={"name": "Lambs", "species": "sheep", "is_default_for_species": True})
+    assert default.status_code == 201, default.text
+
+    conflict = await client.post("/api/farm/groups", headers=headers,
+                                 json={"name": "Rams", "species": "sheep", "is_default_for_species": True})
+    assert conflict.status_code == 409, conflict.text
+
+    # a different species may have its own default at the same time
+    other = await client.post("/api/farm/groups", headers=headers,
+                              json={"name": "Cattle", "species": "cattle", "is_default_for_species": True})
+    assert other.status_code == 201, other.text

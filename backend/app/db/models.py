@@ -95,10 +95,23 @@ class FarmZone(Base):
 
 class AnimalGroup(Base):
     __tablename__ = "animal_groups"
-    __table_args__ = (UniqueConstraint("name", name="uq_animal_group_name"),)
+    __table_args__ = (
+        UniqueConstraint("name", name="uq_animal_group_name"),
+        # At most one default group per species (e.g. "Sheep" over "Lambs"),
+        # so a camera detection can still auto-route when several active
+        # groups share a species — see app.services.inventory_service.group_for_detection.
+        Index(
+            "uq_animal_group_default_species",
+            "species",
+            unique=True,
+            postgresql_where=text("is_default_for_species = true"),
+            sqlite_where=text("is_default_for_species = 1"),
+        ),
+    )
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     species: Mapped[str] = mapped_column(String(80))
+    is_default_for_species: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

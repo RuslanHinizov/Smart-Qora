@@ -789,7 +789,7 @@ table.data tr:last-child td {
 }
 .farm-list > div {
   display: grid;
-  grid-template-columns: 12px 1fr auto;
+  grid-template-columns: 12px 1fr auto auto;
   align-items: center;
   gap: 9px;
   padding: 9px 0;
@@ -810,6 +810,15 @@ table.data tr:last-child td {
 .farm-dot.animal {
   background: var(--c-cyan);
 }
+.pill {
+  padding: 2px 9px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-1);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--c-primary);
+  background: var(--c-primary-soft);
+}
 .farm-add {
   display: grid;
   grid-template-columns: minmax(150px, 1fr) minmax(160px, 1fr) auto;
@@ -817,6 +826,17 @@ table.data tr:last-child td {
   margin-top: auto;
   padding-top: var(--sp-3);
   border-top: 1px solid var(--c-border);
+}
+.farm-add.with-check {
+  grid-template-columns: minmax(150px, 1fr) minmax(160px, 1fr) auto auto;
+}
+.farm-add-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-1);
+  color: var(--c-text-soft);
+  white-space: nowrap;
 }
 .farm-initial {
   max-width: 900px;

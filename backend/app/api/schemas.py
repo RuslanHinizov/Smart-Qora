@@ -159,6 +159,7 @@ class FarmZoneRead(FarmZoneCreate):
 class AnimalGroupCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     species: str = Field(pattern="^(sheep|cattle|goat|horse)$")
+    is_default_for_species: bool = False
     is_active: bool = True
     sort_order: int = Field(default=0, ge=0)
 

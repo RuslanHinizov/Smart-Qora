@@ -23,6 +23,8 @@ const copy = {
     quickAnimals: "Koyun, inek, at ve keçiyi ekle",
     areaExample: "Örnek: Ana Ağıl",
     groupExample: "Örnek: Koyun",
+    defaultForSpecies: "Bu tür için varsayılan grup",
+    defaultBadge: "Varsayılan",
     addArea: "Alanı ekle",
     addGroup: "Grubu ekle",
     inventoryArea: "Hayvanlar şu anda nerede?",
@@ -51,6 +53,8 @@ const copy = {
     quickAnimals: "Добавить овец, КРС, лошадей и коз",
     areaExample: "Например: Основной загон",
     groupExample: "Например: Овцы",
+    defaultForSpecies: "Группа по умолчанию для этого вида",
+    defaultBadge: "По умолчанию",
     addArea: "Добавить зону",
     addGroup: "Добавить группу",
     inventoryArea: "Где сейчас животные?",
@@ -79,6 +83,8 @@ const copy = {
     quickAnimals: "Қой, ірі қара, жылқы және ешкі қосу",
     areaExample: "Мысалы: Негізгі қора",
     groupExample: "Мысалы: Қой",
+    defaultForSpecies: "Осы түр үшін негізгі топ",
+    defaultBadge: "Негізгі",
     addArea: "Аймақ қосу",
     addGroup: "Топ қосу",
     inventoryArea: "Мал қазір қайда?",
@@ -107,6 +113,8 @@ const copy = {
     quickAnimals: "Add sheep, cattle, horses and goats",
     areaExample: "Example: Main pen",
     groupExample: "Example: Sheep",
+    defaultForSpecies: "Default group for this species",
+    defaultBadge: "Default",
     addArea: "Add area",
     addGroup: "Add group",
     inventoryArea: "Where are the animals now?",
@@ -201,6 +209,7 @@ export function Farm() {
   const [zoneKind, setZoneKind] = useState<ZoneKind>("PEN");
   const [groupName, setGroupName] = useState("");
   const [groupSpecies, setGroupSpecies] = useState<AnimalSpecies>("sheep");
+  const [groupDefault, setGroupDefault] = useState(false);
   const [startZone, setStartZone] = useState("");
   const [quantities, setQuantities] = useState<Record<number, string>>({});
   const [physical, setPhysical] = useState<Record<string, string>>({});
@@ -245,6 +254,7 @@ export function Farm() {
         await createGroup.mutateAsync({
           name: names[index],
           species: type as AnimalSpecies,
+          is_default_for_species: false,
           is_active: true,
           sort_order: index,
         });
@@ -352,6 +362,7 @@ export function Farm() {
                   <span className="farm-dot animal" />
                   <strong>{group.name}</strong>
                   <small>{l[group.species]}</small>
+                  {group.is_default_for_species && <span className="pill">{c.defaultBadge}</span>}
                 </div>
               ))}
             </div>
@@ -359,7 +370,7 @@ export function Farm() {
             <p className="hint">{c.noGroups}</p>
           )}
           {isAdmin && (
-            <div className="farm-add">
+            <div className="farm-add with-check">
               <input
                 className="input"
                 placeholder={c.groupExample}
@@ -377,6 +388,14 @@ export function Farm() {
                   </option>
                 ))}
               </select>
+              <label className="farm-add-check">
+                <input
+                  type="checkbox"
+                  checked={groupDefault}
+                  onChange={(e) => setGroupDefault(e.target.checked)}
+                />
+                {c.defaultForSpecies}
+              </label>
               <button
                 className="btn"
                 disabled={!groupName || createGroup.isPending}
@@ -385,10 +404,12 @@ export function Farm() {
                     await createGroup.mutateAsync({
                       name: groupName,
                       species: groupSpecies,
+                      is_default_for_species: groupDefault,
                       is_active: true,
                       sort_order: groupList.length,
                     });
                     setGroupName("");
+                    setGroupDefault(false);
                   })
                 }
               >

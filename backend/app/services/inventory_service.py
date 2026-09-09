@@ -93,11 +93,18 @@ async def apply_movement(
 
 
 async def group_for_detection(session: AsyncSession, animal_type: str) -> AnimalGroup | None:
-    """Resolve a detector label only when exactly one active group owns that species."""
+    """Resolve a detector label to the group its camera movements should land in:
+    the sole active group for that species, or — when several share it (e.g.
+    "Sheep" and "Lambs" both species=sheep) — the one marked as that species'
+    default. Ambiguous otherwise (``group_id`` is a required column, so a camera
+    detection with no resolvable group cannot write a movement at all)."""
     species = canonical(animal_type)
     if species is None:
         return None
     groups = (await session.scalars(
         select(AnimalGroup).where(AnimalGroup.is_active, AnimalGroup.species == species)
     )).all()
-    return groups[0] if len(groups) == 1 else None
+    if len(groups) == 1:
+        return groups[0]
+    defaults = [group for group in groups if group.is_default_for_species]
+    return defaults[0] if len(defaults) == 1 else None
