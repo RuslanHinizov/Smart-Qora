@@ -11,9 +11,12 @@ testler, uçtan uca doğrulama) eksik. Ek olarak, uygulanan kısımda envanteri
 
 Toplam commit'lenmemiş iş: 21 dosya, ~978 satır ekleme.
 
+> **Durum (bu oturumda):** Faz 0 ve Faz 1 tamamlandı ve commit'lendi
+> (`ac26f24`, `1221cd7`). Faz 2'den itibaren henüz başlanmadı.
+
 ---
 
-## Faz 0 — Yeşil taban
+## Faz 0 — Yeşil taban ✅ tamamlandı (`ac26f24`)
 
 Hiçbir şeye dokunmadan önce test paketi yeşil olmalı; aksi halde sonraki
 değişikliklerin neyi bozduğu anlaşılmaz.
@@ -43,12 +46,12 @@ prensip: **test ortamı ambient `.env`'den bağımsız olmalı.**
 
 ---
 
-## Faz 1 — Envanteri gerçekten çalışır hale getir
+## Faz 1 — Envanteri gerçekten çalışır hale getir ✅ tamamlandı (`1221cd7`)
 
 Bu fazdaki maddeler kozmetik değil: 1.1 olmadan kamera envanteri **hiç**
 güncellemez.
 
-### 1.1 · İlk `IN` geçişi her zaman reddediliyor *(kritik)*
+### 1.1 · İlk `IN` geçişi her zaman reddediliyor *(kritik)* ✅
 
 **Sorun.** Tipik kurulumda kamera envanteri asla artırmaz.
 
@@ -91,7 +94,7 @@ yönlendirmeli.
 **Doğrulama.** Yeni test: ağıl=100, dış=`EXTERNAL`(0) kurulumunda bir `IN`
 olayı üret → ağıl 101, `EXTERNAL` −1, bir adet `CAMERA` hareketi.
 
-### 1.2 · `inside_zone_id == outside_zone_id` engellenmiyor
+### 1.2 · `inside_zone_id == outside_zone_id` engellenmiyor ✅
 
 **Sorun.** Yönetici kamera formunda aynı bölgeyi hem iç hem dış seçebilir.
 Her geçişte `apply_movement` 422 fırlatır, yutulur, envanter hiç güncellenmez.
@@ -106,7 +109,7 @@ if self.inside_zone_id is not None and self.inside_zone_id == self.outside_zone_
 
 **Doğrulama.** `PUT /api/cameras/1` aynı iki bölgeyle → 422.
 
-### 1.3 · Var olmayan bölge id'si yanlış hata veriyor
+### 1.3 · Var olmayan bölge id'si yanlış hata veriyor ✅
 
 **Sorun.** `inside_zone_id: 999` gönderilirse FK ihlali olur;
 `cameras.commit_camera` bunu `IntegrityError` sanıp
@@ -120,7 +123,7 @@ varlığını doğrula, yoksa `404 "Farm zone not found"`. `inventory.py`'deki
 
 **Doğrulama.** Olmayan bölge id'si ile `PUT` → 404, mesaj net.
 
-### 1.4 · Envanter hareketi düşünce kimse haberdar olmuyor *(plandaki kabul kriteri)*
+### 1.4 · Envanter hareketi düşünce kimse haberdar olmuyor *(plandaki kabul kriteri)* ✅
 
 **Sorun.** Orijinal plan diyor ki:
 > "Bakiye eksiye düşemez. Böyle bir kamera hareketi kaydedilmez; uygulama ve
@@ -149,7 +152,7 @@ Dashboard'da uyarı şeridi olarak render et.
 **Doğrulama.** Yetersiz kaynakla 50 geçiş üret → tam 1 Telegram mesajı,
 `/api/status` → `inventory_health: "mismatch"`.
 
-### 1.5 · Başarısız harekette sahte sıfır bakiye satırı kalıyor
+### 1.5 · Başarısız harekette sahte sıfır bakiye satırı kalıyor ✅
 
 **Sorun.** `_locked_balance` bakiye satırı yoksa `quantity=0` ile oluşturup
 `flush` ediyor; yetersizlik kontrolü **ondan sonra** fırlatıyor. API yolunda
@@ -399,16 +402,16 @@ sessizce yanlış çalışmasını durdurur; gerisi tamamlama ve cilalama.
 
 Orijinal planın altı kriteri, artık her biri bir testle:
 
-- [ ] Aynı kamera olayı ikinci kez stok değiştiremez
-- [ ] Bir geçişte kaynak ve hedef bölge toplamı korunur
-- [ ] Manuel düzeltme, nedeni ve yapan kullanıcı olmadan kaydedilemez
-- [ ] Kamera bağlantısı eksikken otomatik stok değişmez
-- [ ] Viewer hiçbir envanter verisini değiştiremez
-- [ ] Yeniden başlatma ve video döngüsü stokları şişirmez
+- [x] Aynı kamera olayı ikinci kez stok değiştiremez
+- [x] Bir geçişte kaynak ve hedef bölge toplamı korunur
+- [x] Manuel düzeltme, nedeni ve yapan kullanıcı olmadan kaydedilemez
+- [x] Kamera bağlantısı eksikken otomatik stok değişmez
+- [x] Viewer hiçbir envanter verisini değiştiremez
+- [ ] Yeniden başlatma ve video döngüsü stokları şişirmez *(mevcut testler dolaylı kanıtlıyor — `uq_event_crossing` + `uq_inventory_movement_source_event`; Faz 4'te doğrudan test eklenecek)*
 
 Bu plandan eklenenler:
 
-- [ ] Temiz kurulumda ilk `IN` geçişi envanteri artırır *(1.1)*
-- [ ] Envanter kopukluğu sessiz kalmaz — Telegram + panel *(1.4)*
+- [x] Temiz kurulumda ilk `IN` geçişi envanteri artırır *(1.1)*
+- [x] Envanter kopukluğu sessiz kalmaz — Telegram + panel *(1.4)*
 - [ ] Dört dilde hiçbir sayfada sabit İngilizce metin kalmaz *(Faz 3)*
-- [ ] `backend/.env` içeriği test sonucunu değiştirmez *(0.1)*
+- [x] `backend/.env` içeriği test sonucunu değiştirmez *(0.1)*
