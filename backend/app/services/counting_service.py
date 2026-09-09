@@ -6,27 +6,38 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from pathlib import Path
 
+from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import Settings
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 
 from app.db.database import SessionLocal
-from app.db.models import AnimalEvent, AppSettings, Camera, Direction, RecordingProgress
+from app.db.models import (
+    AnimalEvent, AppSettings, Camera, DailyStatistic, Direction, FarmZone, HerdState,
+    InventoryBalance, InventoryMovement, MovementKind, RecordingProgress,
+)
 from app.core.calendar import site_day
 from app.services.frame_bus import frame_bus
 from app.services.rollup_service import RunningTotals, bump_herd_state, upsert_daily
+from app.services.inventory_service import apply_movement, group_for_detection
 from app.services.statistics_service import today_totals
 from app.services.websocket_manager import websockets
-from app.telegram.notifications import notifier
+from app.telegram.notifications import format_alert, notifier
 from app.vision.annotator import annotate_jpeg
 from app.vision.camera import CameraStream
 from app.vision.classes import canonical
 from app.vision.counter import CrossingEvent, LineCrossingCounter
 from app.vision.detector import LivestockDetector
 from app.vision.tracker import CenterSmoother
+from app.vision.verifier import NonLivestockGuard
 
 logger = logging.getLogger(__name__)
+
+# A camera can fire many crossings per second during a herd burst; without a
+# cooldown a persistent inventory problem would flood Telegram with one alert
+# per animal instead of one alert per incident.
+_INVENTORY_ALERT_COOLDOWN_SECONDS = 900.0
 
 
 def recording_fingerprint(source):
@@ -46,6 +57,7 @@ class CountingService:
         self.counter: LineCrossingCounter | None = None
         self.smoother = CenterSmoother()
         self.detector = None
+        self.non_livestock_guard: NonLivestockGuard | None = None
         self.totals = RunningTotals()
         self.current_inside = 0
         self.line: tuple[tuple[int, int], tuple[int, int]] = ((0, 0), (0, 0))
@@ -57,6 +69,9 @@ class CountingService:
         self.resume_frame = 0
         self.preview_only = False
         self.frame_number = 0
+        self.loop_inventory_baseline: dict[tuple[int, int], int] = {}
+        self.inventory_health = "ok"  # "ok" | "mismatch" | "unconfigured" — surfaced on /api/status
+        self._last_inventory_alert = 0.0
 
     def _set_totals(self, totals):
         self.totals.total_in = totals["total_in"]
@@ -93,9 +108,18 @@ class CountingService:
                 self.settings.img_size, self.settings.tracker, self.settings.allowed_classes,
                 self.settings.require_cuda, self.settings.half_precision,
             )
+            if self.settings.non_livestock_guard:
+                self.non_livestock_guard = await asyncio.to_thread(
+                    NonLivestockGuard, self.settings.non_livestock_model_path, self.settings.device,
+                    self.settings.non_livestock_confidence,
+                    self.settings.non_livestock_candidate_max_confidence,
+                )
 
             is_file = isinstance(source, str) and Path(source).is_file()
             loop_file = is_file and self.settings.video_loop
+            reset_demo_loop = loop_file and self.settings.video_loop_reset
+            if reset_demo_loop:
+                await self._capture_loop_inventory_baseline()
             if is_file:
                 self.recording_key = await asyncio.to_thread(recording_fingerprint, source)
                 self.session_id = self.recording_key
@@ -133,6 +157,8 @@ class CountingService:
                     )
                 self.smoother = CenterSmoother()
                 self.detector.reset_tracker()
+                if self.non_livestock_guard is not None:
+                    self.non_livestock_guard.reset()
                 async for frame in self.stream.frames():
                     if not self.running:
                         break
@@ -146,6 +172,14 @@ class CountingService:
                     now_v = self.frame_number / (getattr(self.stream, "fps", 30.0) or 30.0) if is_file else time.monotonic()
                     result = await asyncio.to_thread(self.detector.track, frame)
                     if result.boxes is not None:
+                        candidates = []
+                        for box in result.boxes:
+                            if box.id is None:
+                                continue
+                            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                            candidates.append((int(box.id.item()), float(box.conf.item()), (x1, y1, x2, y2)))
+                        if self.non_livestock_guard is not None:
+                            await asyncio.to_thread(self.non_livestock_guard.observe, frame, candidates)
                         for box in result.boxes:
                             if box.id is None:
                                 continue
@@ -153,12 +187,16 @@ class CountingService:
                             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                             center = self.smoother.update(track_id, ((x1 + x2) // 2, (y1 + y2) // 2))
                             crossing = self.counter.update(track_id, center, now=now_v)
-                            if crossing and not self.preview_only and self.frame_number > self.resume_frame:
+                            if (crossing and not self.preview_only and self.frame_number > self.resume_frame
+                                    and (self.non_livestock_guard is None
+                                         or track_id not in self.non_livestock_guard.blocked_track_ids)):
                                 raw = result.names[int(box.cls.item())]
                                 await self._save_event(
                                     track_id, canonical(raw) or raw, crossing, float(box.conf.item()))
                         self.counter.prune(now=now_v)
                         self.smoother.prune(self.counter.tracks)
+                        if self.non_livestock_guard is not None:
+                            self.non_livestock_guard.prune(set(self.counter.tracks))
                     checkpoint_frames = max(int(getattr(self.stream, "fps", 30.0) or 30.0), 1)
                     if (is_file and not self.preview_only and self.frame_number > self.resume_frame
                             and self.frame_number % checkpoint_frames == 0):
@@ -177,7 +215,11 @@ class CountingService:
                         last_publish = now
                         await self._publish_frame(frame, result)
                 self.stream.close()
-                if self.running and is_file and not self.preview_only:
+                if self.running and reset_demo_loop:
+                    await self._reset_demo_loop()
+                    self.preview_only = False
+                    self.resume_frame = 0
+                elif self.running and is_file and not self.preview_only:
                     async with SessionLocal() as session:
                         await session.execute(update(RecordingProgress).where(
                             RecordingProgress.camera_id == self.camera_id,
@@ -191,6 +233,45 @@ class CountingService:
             self.running = False
             if self.stream is not None:
                 self.stream.close()
+
+    async def _capture_loop_inventory_baseline(self) -> None:
+        """Remember the farm state before a local demonstration recording starts."""
+        async with SessionLocal() as session:
+            balances = (await session.scalars(select(InventoryBalance))).all()
+            self.loop_inventory_baseline = {
+                (balance.zone_id, balance.group_id): balance.quantity for balance in balances
+            }
+
+    async def _reset_demo_loop(self) -> None:
+        """Reset a local test-file loop without changing a real camera's history.
+
+        This is deliberately opt-in.  RTSP cameras and normal recorded evidence
+        must retain their events; a looping demo video should look like a new
+        live session every time it starts over.
+        """
+        async with SessionLocal() as session:
+            event_ids = select(AnimalEvent.id).where(AnimalEvent.camera_id == self.camera_id)
+            await session.execute(delete(InventoryMovement).where(InventoryMovement.source_event_id.in_(event_ids)))
+            await session.execute(delete(AnimalEvent).where(AnimalEvent.camera_id == self.camera_id))
+            await session.execute(delete(DailyStatistic))
+            await session.execute(update(HerdState).where(HerdState.id == 1).values(current_inside=0, baseline=0))
+            for (zone_id, group_id), quantity in self.loop_inventory_baseline.items():
+                await session.execute(update(InventoryBalance).where(
+                    InventoryBalance.zone_id == zone_id, InventoryBalance.group_id == group_id,
+                ).values(quantity=quantity))
+            if self.recording_key:
+                await session.execute(update(RecordingProgress).where(
+                    RecordingProgress.camera_id == self.camera_id,
+                    RecordingProgress.fingerprint == self.recording_key,
+                ).values(last_frame=0, completed=False))
+            await session.commit()
+            self._set_totals(await today_totals(session))
+        self.current_inside = 0
+        await websockets.broadcast({
+            "type": "statistics", "in": 0, "out": 0, "current": 0,
+            "camera": self.stream.status if self.stream else "ONLINE", "ai": "ACTIVE",
+        })
+        logger.info("demo_video_loop_reset", extra={"camera_id": self.camera_id})
 
     async def _publish_frame(self, frame, result) -> None:
         tally = f"IN {self.totals.total_in}   OUT {self.totals.total_out}   INSIDE {self.current_inside}"
@@ -226,6 +307,30 @@ class CountingService:
                 logger.warning("duplicate_crossing_skipped", extra={
                     "tracking_id": track_id, "direction": crossing.direction, "sequence": crossing.sequence})
                 return
+            camera = await session.get(Camera, self.camera_id)
+            if camera and camera.inside_zone_id and camera.outside_zone_id:
+                group = await group_for_detection(session, animal_type)
+                if group is None:
+                    self.inventory_health = "unconfigured"
+                    logger.warning("inventory_group_not_configured", extra={"animal_type": animal_type})
+                    await self._alert_inventory("inventory_unconfigured", animal_type=animal_type)
+                else:
+                    from_zone_id = camera.outside_zone_id if crossing.direction == "IN" else camera.inside_zone_id
+                    try:
+                        await apply_movement(
+                            session, group_id=group.id, quantity=1, kind=MovementKind.CAMERA,
+                            from_zone_id=from_zone_id,
+                            to_zone_id=camera.inside_zone_id if crossing.direction == "IN" else camera.outside_zone_id,
+                            source_event_id=event.id, note=f"Camera: {camera.name}",
+                        )
+                        self.inventory_health = "ok"
+                    except HTTPException as exc:
+                        self.inventory_health = "mismatch"
+                        zone = await session.get(FarmZone, from_zone_id)
+                        logger.warning("inventory_camera_movement_skipped", extra={
+                            "event_id": event.id, "detail": exc.detail, "animal_type": animal_type,
+                        })
+                        await self._alert_inventory("inventory_mismatch", zone=zone.name if zone else from_zone_id)
             await upsert_daily(session, site_day(now), animal_type, d_in, d_out)
             current = await bump_herd_state(session, 1 if crossing.direction == "IN" else -1)
             if self.recording_key:
@@ -255,6 +360,16 @@ class CountingService:
         logger.info("animal_crossing", extra={
             "direction": crossing.direction, "tracking_id": track_id, "animal_type": animal_type,
             "sequence": crossing.sequence})
+
+    async def _alert_inventory(self, key: str, **kw) -> None:
+        """Rate-limited Telegram alert for a camera crossing that could not update
+        the farm inventory. Distinct from ``notifier.add`` (the aggregated IN/OUT
+        tally): this fires immediately, once per cooldown window."""
+        now = time.monotonic()
+        if now - self._last_inventory_alert < _INVENTORY_ALERT_COOLDOWN_SECONDS:
+            return
+        self._last_inventory_alert = now
+        await notifier.alert(lambda language, k=key, kw=kw: format_alert(k, language, **kw))
 
     def stop(self) -> None:
         self.running = False

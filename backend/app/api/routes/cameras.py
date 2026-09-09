@@ -8,7 +8,7 @@ from app.api.schemas import CameraCreate, CameraRead, mask_credentials
 from app.core.config import get_settings
 from app.core.i18n import normalize_language, translate
 from app.db.database import get_session
-from app.db.models import Camera, AnimalEvent, RecordingProgress
+from app.db.models import Camera, AnimalEvent, FarmZone, RecordingProgress
 from app.services.frame_bus import frame_bus
 
 router = APIRouter(prefix="/cameras", tags=["cameras"], dependencies=[Depends(get_current_user)])
@@ -30,6 +30,14 @@ async def commit_camera(session):
         raise HTTPException(409, "Camera configuration changed concurrently; reload and retry") from None
 
 
+async def _validate_zones(payload: CameraCreate, session: AsyncSession) -> None:
+    """A missing zone id would otherwise surface as a FK IntegrityError, which
+    ``commit_camera`` reports as a misleading 409 concurrency conflict."""
+    for zone_id in (payload.inside_zone_id, payload.outside_zone_id):
+        if zone_id is not None and await session.get(FarmZone, zone_id) is None:
+            raise HTTPException(404, "Farm zone not found")
+
+
 def lang(request: Request):
     return normalize_language(request.query_params.get("lang") or request.headers.get("accept-language"), get_settings().default_language)
 
@@ -43,6 +51,7 @@ async def list_cameras(session: AsyncSession = Depends(get_session)):
 async def create_camera(payload: CameraCreate, request: Request, session: AsyncSession = Depends(get_session)):
     if "***" in payload.source:
         raise HTTPException(422, "Enter actual camera credentials for a new source")
+    await _validate_zones(payload, session)
     if payload.is_active:
         await session.execute(update(Camera).values(is_active=False))
     camera = Camera(**payload.model_dump())
@@ -62,6 +71,7 @@ async def camera_or_404(camera_id: int, request: Request, session: AsyncSession)
 @router.put("/{camera_id}", response_model=CameraRead, dependencies=_admin)
 async def update_camera(camera_id: int, payload: CameraCreate, request: Request, session: AsyncSession = Depends(get_session)):
     camera = await camera_or_404(camera_id, request, session)
+    await _validate_zones(payload, session)
     was_active = camera.is_active
     changed = payload.model_dump()
     if changed["source"] == mask_credentials(camera.source):

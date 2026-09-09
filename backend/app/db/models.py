@@ -33,6 +33,20 @@ class Role(str, enum.Enum):
     viewer = "viewer"
 
 
+class ZoneKind(str, enum.Enum):
+    PEN = "PEN"
+    PASTURE = "PASTURE"
+    QUARANTINE = "QUARANTINE"
+    EXTERNAL = "EXTERNAL"
+
+
+class MovementKind(str, enum.Enum):
+    INITIAL = "INITIAL"
+    CAMERA = "CAMERA"
+    MANUAL_ADJUSTMENT = "MANUAL_ADJUSTMENT"
+    TRANSFER = "TRANSFER"
+
+
 class Camera(Base):
     __tablename__ = "cameras"
     __table_args__ = (
@@ -62,8 +76,73 @@ class Camera(Base):
     iou: Mapped[float | None] = mapped_column(Float, nullable=True)
     frame_skip: Mapped[int | None] = mapped_column(Integer, nullable=True)
     stream_fps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    inside_zone_id: Mapped[int | None] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"), nullable=True)
+    outside_zone_id: Mapped[int | None] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     events: Mapped[list["AnimalEvent"]] = relationship(back_populates="camera")
+
+
+class FarmZone(Base):
+    __tablename__ = "farm_zones"
+    __table_args__ = (UniqueConstraint("name", name="uq_farm_zone_name"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    kind: Mapped[ZoneKind] = mapped_column(Enum(ZoneKind), default=ZoneKind.PEN)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class AnimalGroup(Base):
+    __tablename__ = "animal_groups"
+    __table_args__ = (UniqueConstraint("name", name="uq_animal_group_name"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    species: Mapped[str] = mapped_column(String(80))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class InventoryBalance(Base):
+    __tablename__ = "inventory_balances"
+    zone_id: Mapped[int] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"), primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("animal_groups.id", ondelete="RESTRICT"), primary_key=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+
+class InventoryMovement(Base):
+    __tablename__ = "inventory_movements"
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="ck_inventory_movement_positive_quantity"),
+        UniqueConstraint("source_event_id", name="uq_inventory_movement_source_event"),
+        Index("ix_inventory_movement_created_at", "created_at"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("animal_groups.id", ondelete="RESTRICT"))
+    from_zone_id: Mapped[int | None] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"), nullable=True)
+    to_zone_id: Mapped[int | None] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"), nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[MovementKind] = mapped_column(Enum(MovementKind))
+    source_event_id: Mapped[int | None] = mapped_column(ForeignKey("animal_events.id", ondelete="RESTRICT"), nullable=True)
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class InventoryReconciliation(Base):
+    __tablename__ = "inventory_reconciliations"
+    __table_args__ = (CheckConstraint("physical_quantity >= 0", name="ck_reconciliation_nonnegative"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    zone_id: Mapped[int] = mapped_column(ForeignKey("farm_zones.id", ondelete="RESTRICT"))
+    group_id: Mapped[int] = mapped_column(ForeignKey("animal_groups.id", ondelete="RESTRICT"))
+    expected_quantity: Mapped[int] = mapped_column(Integer)
+    physical_quantity: Mapped[int] = mapped_column(Integer)
+    difference: Mapped[int] = mapped_column(Integer)
+    note: Mapped[str] = mapped_column(Text)
+    created_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
 class AnimalEvent(Base):

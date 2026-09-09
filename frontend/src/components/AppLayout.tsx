@@ -12,17 +12,24 @@ const NAV: Array<{
   to: string;
   icon: IconName;
   key: "dashboard" | "cameras" | "events" | "statistics" | "settings";
+  label?: "farm";
 }> = [
   { to: "/", icon: "grid", key: "dashboard" },
   { to: "/cameras", icon: "camera", key: "cameras" },
   { to: "/events", icon: "events", key: "events" },
+  { to: "/farm", icon: "barn", key: "settings", label: "farm" },
   { to: "/statistics", icon: "chart", key: "statistics" },
   { to: "/settings", icon: "settings", key: "settings" },
 ];
+const FARM_LABEL: Record<Language, string> = {
+  en: "Farm",
+  ru: "Ферма",
+  kk: "Ферма",
+  tr: "Çiftlik",
+};
 
 export function AppLayout() {
-  const { t } = useLanguage();
-  const { setLanguageIfUnset } = useLanguage();
+  const { t, language, setLanguageIfUnset } = useLanguage();
   const { role, logout } = useAuth();
   const location = useLocation();
   useLiveSocket();
@@ -52,7 +59,7 @@ export function AppLayout() {
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === "/"}>
               <Icon name={item.icon} size={18} />
-              <span>{t[item.key]}</span>
+              <span>{item.label ? FARM_LABEL[language] : t[item.key]}</span>
             </NavLink>
           ))}
         </nav>
@@ -72,7 +79,7 @@ export function AppLayout() {
         <header className="topbar">
           <div>
             <span className="eyebrow">{t.appName}</span>
-            <h1>{t[current.key]}</h1>
+            <h1>{current.label ? FARM_LABEL[language] : t[current.key]}</h1>
           </div>
           <div className="topbar-actions">
             <LanguageSwitcher />

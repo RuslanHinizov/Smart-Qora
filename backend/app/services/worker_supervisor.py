@@ -42,6 +42,10 @@ class WorkerSupervisor:
     def last_frame_at(self) -> float | None:
         return getattr(self._service, "last_frame_at", None)
 
+    @property
+    def inventory_health(self) -> str:
+        return getattr(self._service, "inventory_health", "ok")
+
     def start(self) -> None:
         self._stopped = False
         self._task = asyncio.create_task(self._run_forever(), name="vision-worker")

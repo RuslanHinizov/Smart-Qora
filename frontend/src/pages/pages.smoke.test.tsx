@@ -37,9 +37,9 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("page smoke render", () => {
-  it("Dashboard renders its metric labels", () => {
+  it("Dashboard renders farm overview", () => {
     wrap(<Dashboard />);
-    expect(screen.getByText(/entered today/i)).toBeInTheDocument();
+    expect(screen.getByText(/where animals are now/i)).toBeInTheDocument();
   });
 
   it("Cameras renders the empty state", async () => {

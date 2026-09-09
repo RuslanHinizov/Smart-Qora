@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Cameras } from "./pages/Cameras";
 import { Dashboard } from "./pages/Dashboard";
 import { Events } from "./pages/Events";
+import { Farm } from "./pages/Farm";
 import { Login } from "./pages/Login";
 import { Settings } from "./pages/Settings";
 import { Statistics } from "./pages/Statistics";
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
           { path: "/", element: <Dashboard /> },
           { path: "/cameras", element: <Cameras /> },
           { path: "/events", element: <Events /> },
+          { path: "/farm", element: <Farm /> },
           { path: "/statistics", element: <Statistics /> },
           { path: "/settings", element: <Settings /> },
         ],

@@ -2,11 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "./client";
 import type {
   AppSettings,
+  AnimalGroup,
   Camera,
   CameraInput,
   EventQuery,
   EventRow,
   HistoryRow,
+  FarmZone,
+  InventoryBalance,
+  InventoryMovement,
   Me,
   SettingsInput,
   SystemStatus,
@@ -22,6 +26,10 @@ export const keys = {
   events: (query: EventQuery) => ["events", query] as const,
   cameras: ["cameras"] as const,
   settings: ["settings"] as const,
+  farmZones: ["farm", "zones"] as const,
+  animalGroups: ["farm", "groups"] as const,
+  inventory: ["inventory", "summary"] as const,
+  inventoryMovements: ["inventory", "movements"] as const,
   history: (from: string, to: string, group: string) => ["history", from, to, group] as const,
 };
 
@@ -83,6 +91,73 @@ export function useSettings() {
     queryKey: keys.settings,
     queryFn: async () => (await apiFetch<AppSettings>("/settings")).data,
   });
+}
+
+export function useFarmZones() {
+  return useQuery({
+    queryKey: keys.farmZones,
+    queryFn: async () => (await apiFetch<FarmZone[]>("/farm/zones")).data,
+  });
+}
+
+export function useAnimalGroups() {
+  return useQuery({
+    queryKey: keys.animalGroups,
+    queryFn: async () => (await apiFetch<AnimalGroup[]>("/farm/groups")).data,
+  });
+}
+
+export function useInventory() {
+  return useQuery({
+    queryKey: keys.inventory,
+    queryFn: async () => (await apiFetch<InventoryBalance[]>("/inventory/summary")).data,
+  });
+}
+
+export function useInventoryMovements() {
+  return useQuery({
+    queryKey: keys.inventoryMovements,
+    queryFn: async () => (await apiFetch<InventoryMovement[]>("/inventory/movements")).data,
+  });
+}
+
+export function useFarmMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: keys.farmZones });
+    void qc.invalidateQueries({ queryKey: keys.animalGroups });
+    void qc.invalidateQueries({ queryKey: keys.inventory });
+    void qc.invalidateQueries({ queryKey: keys.inventoryMovements });
+  };
+  return {
+    createZone: useMutation({
+      mutationFn: (input: Omit<FarmZone, "id" | "created_at">) =>
+        apiFetch<FarmZone>("/farm/zones", { body: input }),
+      onSuccess: invalidate,
+    }),
+    createGroup: useMutation({
+      mutationFn: (input: Omit<AnimalGroup, "id" | "created_at">) =>
+        apiFetch<AnimalGroup>("/farm/groups", { body: input }),
+      onSuccess: invalidate,
+    }),
+    initialise: useMutation({
+      mutationFn: (input: {
+        zone_id: number;
+        entries: Array<{ group_id: number; quantity: number }>;
+        note?: string;
+      }) => apiFetch<InventoryMovement[]>("/inventory/initialise", { body: input }),
+      onSuccess: invalidate,
+    }),
+    reconcile: useMutation({
+      mutationFn: (input: {
+        zone_id: number;
+        group_id: number;
+        physical_quantity: number;
+        note: string;
+      }) => apiFetch("/inventory/reconcile", { body: input }),
+      onSuccess: invalidate,
+    }),
+  };
 }
 
 export function useHistory(from: string, to: string, group: "day" | "week" | "month") {

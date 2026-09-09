@@ -3,7 +3,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
-from app.db.models import LineDirection, Role
+from app.db.models import LineDirection, MovementKind, Role, ZoneKind
 
 
 def mask_credentials(value: str) -> str:
@@ -34,6 +34,8 @@ class CameraCreate(BaseModel):
     iou: float | None = Field(default=None, ge=0, le=1)
     frame_skip: int | None = Field(default=None, ge=0)
     stream_fps: int | None = Field(default=None, gt=0)
+    inside_zone_id: int | None = Field(default=None, gt=0)
+    outside_zone_id: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def valid_geometry(self):
@@ -50,6 +52,8 @@ class CameraCreate(BaseModel):
         if line[0] is not None:
             LineCrossingCounter(line[:2], line[2:], (self.inside_direction or LineDirection.DOWN).value,
                                 line2=(other[:2], other[2:]) if other[0] is not None else None)
+        if self.inside_zone_id is not None and self.inside_zone_id == self.outside_zone_id:
+            raise ValueError("Inside and outside zones must differ")
         return self
 
 
@@ -137,3 +141,99 @@ class SettingsUpdate(BaseModel):
 
 class HerdCalibrate(BaseModel):
     current_inside: int = Field(ge=0)
+
+
+class FarmZoneCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    kind: ZoneKind = ZoneKind.PEN
+    is_active: bool = True
+    sort_order: int = Field(default=0, ge=0)
+
+
+class FarmZoneRead(FarmZoneCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+
+
+class AnimalGroupCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    species: str = Field(pattern="^(sheep|cattle|goat|horse)$")
+    is_active: bool = True
+    sort_order: int = Field(default=0, ge=0)
+
+
+class AnimalGroupRead(AnimalGroupCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+
+
+class InventoryEntry(BaseModel):
+    group_id: int = Field(gt=0)
+    quantity: int = Field(gt=0)
+
+
+class InventoryInitialise(BaseModel):
+    zone_id: int = Field(gt=0)
+    entries: list[InventoryEntry] = Field(min_length=1)
+    note: str = Field(default="Başlangıç envanteri", max_length=1000)
+
+
+class InventoryTransfer(BaseModel):
+    group_id: int = Field(gt=0)
+    from_zone_id: int | None = Field(default=None, gt=0)
+    to_zone_id: int | None = Field(default=None, gt=0)
+    quantity: int = Field(gt=0)
+    note: str = Field(min_length=3, max_length=1000)
+
+    @model_validator(mode="after")
+    def zones_are_valid(self):
+        if self.from_zone_id is None and self.to_zone_id is None:
+            raise ValueError("Choose a source or destination zone")
+        if self.from_zone_id == self.to_zone_id and self.from_zone_id is not None:
+            raise ValueError("Source and destination zones must differ")
+        return self
+
+
+class InventoryReconcile(BaseModel):
+    zone_id: int = Field(gt=0)
+    group_id: int = Field(gt=0)
+    physical_quantity: int = Field(ge=0)
+    note: str = Field(min_length=3, max_length=1000)
+
+
+class InventoryBalanceRead(BaseModel):
+    zone_id: int
+    zone_name: str
+    group_id: int
+    group_name: str
+    species: str
+    quantity: int
+
+
+class InventoryMovementRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    group_id: int
+    from_zone_id: int | None
+    to_zone_id: int | None
+    quantity: int
+    kind: MovementKind
+    source_event_id: int | None
+    note: str
+    created_by_user_id: int | None
+    created_at: datetime
+
+
+class InventoryReconciliationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    zone_id: int
+    group_id: int
+    expected_quantity: int
+    physical_quantity: int
+    difference: int
+    note: str
+    created_by_user_id: int
+    created_at: datetime

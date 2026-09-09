@@ -70,7 +70,9 @@ describe("real useLiveSocket hook", () => {
       expect(qc.getQueryData(key)).toEqual({ rows: [{ id: 50 }], total: 120 });
     expect(invalidate).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(500));
-    expect(invalidate).toHaveBeenCalledTimes(2);
+    expect(invalidate).toHaveBeenCalledTimes(4);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["inventory", "summary"] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["inventory", "movements"] });
     for (const key of keys) expect(qc.getQueryState(key)?.isInvalidated).toBe(true);
     unmount();
   });

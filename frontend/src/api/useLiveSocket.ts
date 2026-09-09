@@ -30,6 +30,11 @@ export function useLiveSocket() {
         refreshTimer = undefined;
         void qc.invalidateQueries({ queryKey: ["events"] });
         void qc.invalidateQueries({ queryKey: ["history"] });
+        // A crossing also moves the animal between farm zones. Refresh this
+        // summary in the same short batch so the "in pen / pasture" cards
+        // follow the video without hammering the API during a herd burst.
+        void qc.invalidateQueries({ queryKey: keys.inventory });
+        void qc.invalidateQueries({ queryKey: keys.inventoryMovements });
       }, 500);
     };
 

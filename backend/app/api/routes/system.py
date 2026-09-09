@@ -41,6 +41,7 @@ async def system_status(request: Request):
         "worker": supervisor.state if supervisor else "stopped",
         "restarts": supervisor.restarts if supervisor else 0,
         "last_error": supervisor.last_error if supervisor else None,
+        "inventory_health": supervisor.inventory_health if supervisor else "ok",
         "languages": list(SUPPORTED_LANGUAGES),
     }
 

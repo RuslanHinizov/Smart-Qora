@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     frame_skip: int = 0
     stream_fps: int = 12
     video_loop: bool = True
+    video_loop_reset: bool = False   # demo-video only: reset its session when the file restarts
     tracker: Literal["botsort.yaml", "botsort_reid.yaml", "bytetrack.yaml"] = "botsort.yaml"
     # Defaults point at the bundled demo clip so a fresh clone counts out of the
     # box; override VIDEO_SOURCE + COUNT_LINE_* in .env for a real camera.
@@ -36,6 +37,10 @@ class Settings(BaseSettings):
     count_min_track_updates: int = 3      # ignore a crossing until a track has this many hits
     count_entry_zone: str = ""            # "x1,y1,x2,y2" — only count tracks seen inside it
     count_line2: str = ""                 # "x1,y1,x2,y2" — a 2nd tripwire; a track must cross both in order
+    non_livestock_guard: bool = True       # reject a tracked object confirmed as a dog
+    non_livestock_model_path: str = "models/yolo11n.pt"
+    non_livestock_confidence: float = 0.25
+    non_livestock_candidate_max_confidence: float = 0.75
     allowed_classes: list[str] = ["sheep", "cattle", "goat", "horse"]
     default_language: Literal["ru", "kk", "en", "tr"] = "ru"
     telegram_bot_token: str = ""
@@ -58,7 +63,7 @@ class Settings(BaseSettings):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
-    @field_validator("confidence", "iou")
+    @field_validator("confidence", "iou", "non_livestock_confidence", "non_livestock_candidate_max_confidence")
     @classmethod
     def unit_interval(cls, value: float) -> float:
         if not 0.0 <= value <= 1.0:

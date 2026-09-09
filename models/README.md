@@ -3,6 +3,7 @@
 | file | committed? | what it is |
 |---|---|---|
 | `best.pt` | **yes** (~22 MB) | The detection checkpoint the backend loads. A **YOLOv8s fine-tune** on the Zenodo sheep gate-crossing set (details below). Bundled so the repo runs straight after `git clone`. |
+| `yolo11n.pt` | **yes** (~5 MB) | A compact generic safety check. It recognizes a dog that the livestock model could otherwise mistake for a sheep; it never creates an animal count itself. |
 | `best.prev.pt` | no (`.gitignore`) | Previous `best.pt` (YOLOE-26s baseline). Local rollback copy. |
 | `yolov8s.pt` | no | Fine-tune base weights. Ultralytics fetches it automatically when you run `training/`. |
 | `mobileclip2_b.ts` | no | Text encoder for YOLOE open-vocabulary prompting. Not used by the shipped model. |

@@ -17,7 +17,8 @@ export type IconName =
   | "logout"
   | "filter"
   | "x"
-  | "alert";
+  | "alert"
+  | "barn";
 
 const paths: Record<IconName, ReactNode> = {
   grid: (
@@ -89,6 +90,7 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
     </>
   ),
+  barn: <path d="M3 21V10l9-7 9 7v11M7 21v-6h10v6M4 11h16" />,
 };
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {

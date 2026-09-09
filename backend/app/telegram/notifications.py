@@ -19,24 +19,32 @@ ALERT = {
         "camera_offline": "⚠️ Камера недоступна — нет видеопотока.",
         "recovered": "✅ Система восстановлена, подсчёт возобновлён.",
         "idle": "⚠️ Уже {hours} ч нет ни одного прохода через ворота. Проверьте камеру.",
+        "inventory_mismatch": "⚠️ Проход через ворота не изменил учётный остаток — в исходной зоне '{zone}' недостаточно животных. Нужна физическая сверка.",
+        "inventory_unconfigured": "⚠️ Проход через ворота не привязан к группе животных (вид «{animal_type}»). Настройте группы на странице «Ферма».",
     },
     "kk": {
         "worker_down": "⚠️ ЖИ модулі тоқтады — санақ жүрмейді. Серверді тексеріңіз.",
         "camera_offline": "⚠️ Камера қолжетімсіз — видео ағыны жоқ.",
         "recovered": "✅ Жүйе қалпына келді, санақ жалғасуда.",
         "idle": "⚠️ {hours} сағат бойы қақпадан бірде-бір өту жоқ. Камераны тексеріңіз.",
+        "inventory_mismatch": "⚠️ Қақпадан өту есептегі қалдықты өзгертпеді — '{zone}' аймағында мал жеткіліксіз. Физикалық тексеру керек.",
+        "inventory_unconfigured": "⚠️ Қақпадан өту мал тобына байланыстырылмаған («{animal_type}» түрі). «Ферма» бетінде топтарды баптаңыз.",
     },
     "en": {
         "worker_down": "⚠️ The AI worker has stopped — counting is paused. Check the server.",
         "camera_offline": "⚠️ Camera is unreachable — no video stream.",
         "recovered": "✅ System recovered, counting resumed.",
         "idle": "⚠️ No gate crossings for {hours}h. Check the camera.",
+        "inventory_mismatch": "⚠️ A gate crossing did not update the inventory — zone '{zone}' does not have enough animals recorded. Physical verification needed.",
+        "inventory_unconfigured": "⚠️ A gate crossing is not linked to an animal group (species \"{animal_type}\"). Configure groups on the Farm page.",
     },
     "tr": {
         "worker_down": "⚠️ Yapay zeka modülü durdu — sayım yapılmıyor. Sunucuyu kontrol edin.",
         "camera_offline": "⚠️ Kameraya ulaşılamıyor — video akışı yok.",
         "recovered": "✅ Sistem düzeldi, sayım devam ediyor.",
         "idle": "⚠️ {hours} saattir kapıdan hiç geçiş yok. Kamerayı kontrol edin.",
+        "inventory_mismatch": "⚠️ Kapı geçişi envanteri güncellemedi — '{zone}' bölgesinde kayıtlı yeterli hayvan yok. Fiziksel doğrulama gerekli.",
+        "inventory_unconfigured": "⚠️ Kapı geçişi bir hayvan grubuna bağlı değil (tür: \"{animal_type}\"). Gruplarınızı Çiftlik sayfasından ayarlayın.",
     },
 }
 

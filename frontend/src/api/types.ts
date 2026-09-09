@@ -4,6 +4,7 @@ export type InsideDirection = "UP" | "DOWN" | "LEFT" | "RIGHT";
 export type CameraStatus = "ONLINE" | "OFFLINE" | "RECONNECTING";
 export type AiStatus = "ACTIVE" | "IDLE";
 export type WorkerState = "starting" | "running" | "restarting" | "stopped" | "failed";
+export type InventoryHealth = "ok" | "mismatch" | "unconfigured";
 
 export type LoginResponse = { access_token: string; token_type: string; role: Role };
 export type Me = { id: number; username: string; role: Role; is_active: boolean };
@@ -14,6 +15,7 @@ export type SystemStatus = {
   worker: WorkerState | string;
   restarts: number;
   last_error: string | null;
+  inventory_health: InventoryHealth | string;
   languages: string[];
 };
 
@@ -56,6 +58,8 @@ export type Camera = {
   iou: number | null;
   frame_skip: number | null;
   stream_fps: number | null;
+  inside_zone_id: number | null;
+  outside_zone_id: number | null;
   created_at: string;
 };
 
@@ -102,6 +106,45 @@ export type EventQuery = {
   animal_type?: string;
   from?: string;
   to?: string;
+};
+
+export type ZoneKind = "PEN" | "PASTURE" | "QUARANTINE" | "EXTERNAL";
+export type FarmZone = {
+  id: number;
+  name: string;
+  kind: ZoneKind;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+export type AnimalSpecies = "sheep" | "cattle" | "goat" | "horse";
+export type AnimalGroup = {
+  id: number;
+  name: string;
+  species: AnimalSpecies;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+export type InventoryBalance = {
+  zone_id: number;
+  zone_name: string;
+  group_id: number;
+  group_name: string;
+  species: AnimalSpecies;
+  quantity: number;
+};
+export type MovementKind = "INITIAL" | "CAMERA" | "MANUAL_ADJUSTMENT" | "TRANSFER";
+export type InventoryMovement = {
+  id: number;
+  group_id: number;
+  from_zone_id: number | null;
+  to_zone_id: number | null;
+  quantity: number;
+  kind: MovementKind;
+  source_event_id: number | null;
+  note: string;
+  created_at: string;
 };
 
 export type StatsMessage = {

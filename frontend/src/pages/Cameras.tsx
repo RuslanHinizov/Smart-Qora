@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCameraMutations, useCameras } from "../api/queries";
+import { useCameraMutations, useCameras, useFarmZones } from "../api/queries";
 import type { Camera, CameraInput, InsideDirection } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { Icon } from "../components/Icon";
@@ -24,6 +24,8 @@ const EMPTY: CameraInput = {
   iou: null,
   frame_skip: null,
   stream_fps: null,
+  inside_zone_id: null,
+  outside_zone_id: null,
 };
 
 function toInput(camera: Camera): CameraInput {
@@ -37,6 +39,7 @@ export function Cameras() {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
   const cameras = useCameras();
+  const zones = useFarmZones();
   const { create, update, remove } = useCameraMutations();
   const [editing, setEditing] = useState<{ id: number | null; input: CameraInput } | null>(null);
   const [saveError, setSaveError] = useState(false);
@@ -145,6 +148,54 @@ export function Cameras() {
                 value={editing.input.name}
                 onChange={(v) => setEditing({ ...editing, input: { ...editing.input, name: v } })}
               />
+              <div className="form-row">
+                <div className="field">
+                  <label>Outside zone</label>
+                  <select
+                    className="select"
+                    value={editing.input.outside_zone_id ?? ""}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        input: {
+                          ...editing.input,
+                          outside_zone_id: e.target.value ? Number(e.target.value) : null,
+                        },
+                      })
+                    }
+                  >
+                    <option value="">Not connected</option>
+                    {(zones.data ?? []).map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Inside zone</label>
+                  <select
+                    className="select"
+                    value={editing.input.inside_zone_id ?? ""}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        input: {
+                          ...editing.input,
+                          inside_zone_id: e.target.value ? Number(e.target.value) : null,
+                        },
+                      })
+                    }
+                  >
+                    <option value="">Not connected</option>
+                    {(zones.data ?? []).map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="field">
                 <label>{t.source}</label>
                 <input

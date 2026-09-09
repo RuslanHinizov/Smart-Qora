@@ -18,6 +18,7 @@ async def test_status_and_ready(client, admin_token, auth):
     assert status.status_code == 200
     body = status.json()
     assert body["camera"] == "OFFLINE" and body["ai"] == "IDLE"
+    assert body["inventory_health"] == "ok"  # no worker running yet
     assert set(body["languages"]) == {"ru", "kk", "en", "tr"}
 
     ready = await client.get("/api/ready")
@@ -44,6 +45,28 @@ async def test_camera_crud_roundtrip(client, clean_db, admin_token, auth):
 
     deleted = await client.delete(f"/api/cameras/{camera['id']}", headers=auth(admin_token))
     assert deleted.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_camera_rejects_same_inside_and_outside_zone(client, clean_db, admin_token, auth):
+    headers = auth(admin_token)
+    zone = await client.post("/api/farm/zones", headers=headers, json={"name": "Pen", "kind": "PEN"})
+    assert zone.status_code == 201, zone.text
+    zone_id = zone.json()["id"]
+
+    response = await client.post("/api/cameras", headers=headers, json={
+        "name": "Gate A", "inside_zone_id": zone_id, "outside_zone_id": zone_id,
+    })
+    assert response.status_code == 422, response.text
+
+
+@pytest.mark.asyncio
+async def test_camera_missing_zone_is_404_not_409(client, clean_db, admin_token, auth):
+    headers = auth(admin_token)
+    response = await client.post("/api/cameras", headers=headers, json={
+        "name": "Gate A", "inside_zone_id": 999999,
+    })
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.asyncio
