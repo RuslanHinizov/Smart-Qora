@@ -17,7 +17,7 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.security import SESSION_COOKIE, decode_token
 from app.db.database import SessionLocal
-from app.db.seed import ensure_admin, ensure_default_camera
+from app.db.seed import ensure_admin, ensure_default_camera, ensure_default_farm
 from app.services.websocket_manager import websockets
 from app.services.worker_supervisor import WorkerSupervisor
 from app.telegram.bot import command_bot
@@ -35,7 +35,8 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("The in-process vision worker requires WEB_CONCURRENCY=1")
     async with SessionLocal() as session:
         await ensure_admin(session, settings)
-        await ensure_default_camera(session, settings)
+        camera = await ensure_default_camera(session, settings)
+        await ensure_default_farm(session, camera)
 
     def _status() -> dict:
         sup = getattr(app.state, "supervisor", None)

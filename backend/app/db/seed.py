@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
 from app.core.security import hash_password
-from app.db.models import Camera, LineDirection, Role, User
+from app.db.models import AnimalGroup, Camera, FarmZone, LineDirection, Role, User, ZoneKind
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,32 @@ async def ensure_default_camera(session: AsyncSession, settings: Settings) -> Ca
     await session.refresh(camera)
     logger.info("default_camera_seeded", extra={"camera_id": camera.id})
     return camera
+
+
+async def ensure_default_farm(session: AsyncSession, camera: Camera | None = None) -> None:
+    """First-boot only: seed a starter set of farm zones + animal groups so a
+    fresh box has something to link the default camera to and the Dashboard
+    and Farm page aren't empty. Starting quantities are deliberately NOT
+    seeded here — the admin enters those from the Farm page (step 3), since
+    only they know the real headcount."""
+    if await session.scalar(select(FarmZone.id).limit(1)) is not None:
+        return
+    outside = FarmZone(name="Outside", kind=ZoneKind.EXTERNAL, sort_order=0)
+    pen = FarmZone(name="Main Pen", kind=ZoneKind.PEN, sort_order=1)
+    pasture = FarmZone(name="Pasture", kind=ZoneKind.PASTURE, sort_order=2)
+    session.add_all([
+        outside, pen, pasture,
+        AnimalGroup(name="Sheep", species="sheep", sort_order=0),
+        AnimalGroup(name="Cattle", species="cattle", sort_order=1),
+        AnimalGroup(name="Goats", species="goat", sort_order=2),
+        AnimalGroup(name="Horses", species="horse", sort_order=3),
+    ])
+    await session.flush()
+    if camera is not None and camera.inside_zone_id is None and camera.outside_zone_id is None:
+        camera.inside_zone_id = pen.id
+        camera.outside_zone_id = outside.id
+    await session.commit()
+    logger.info("default_farm_seeded")
 
 
 async def ensure_admin(session: AsyncSession, settings: Settings) -> None:
