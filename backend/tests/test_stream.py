@@ -29,6 +29,34 @@ async def test_snapshot_accepts_session_cookie_and_returns_jpeg(client, admin_to
 
 
 @pytest.mark.asyncio
+async def test_snapshot_with_no_viewer_asks_the_worker_for_a_frame(client, admin_token, reset_frame_bus):
+    """The worker only renders while someone is subscribed; the line editor has
+    no live viewer, so the snapshot itself must subscribe and wait for a frame."""
+    async def worker():
+        while not reset_frame_bus.has_subscribers:
+            await asyncio.sleep(0.01)
+        reset_frame_bus.publish(_FAKE_JPEG)
+
+    task = asyncio.create_task(worker())
+    resp = await client.get("/api/stream/snapshot")
+    await task
+    assert resp.content == _FAKE_JPEG
+    assert not reset_frame_bus.has_subscribers  # the temporary subscription is released
+
+
+@pytest.mark.asyncio
+async def test_snapshot_falls_back_to_placeholder_when_no_frame_arrives(client, admin_token, reset_frame_bus,
+                                                                         monkeypatch):
+    from app.api.routes import stream
+
+    monkeypatch.setattr(stream, "_SNAPSHOT_WAIT_SECONDS", 0.05)
+    resp = await client.get("/api/stream/snapshot")
+    assert resp.status_code == 200
+    assert resp.content == stream._OFFLINE_JPEG
+    assert not reset_frame_bus.has_subscribers
+
+
+@pytest.mark.asyncio
 async def test_mjpeg_requires_a_token(client):
     assert (await client.get("/api/stream/mjpeg")).status_code == 401
     assert (await client.get("/api/stream/mjpeg?token=not-a-jwt")).status_code == 401

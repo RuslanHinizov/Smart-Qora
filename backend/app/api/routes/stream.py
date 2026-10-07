@@ -9,6 +9,7 @@ from app.services.frame_bus import frame_bus
 router = APIRouter(prefix="/stream", tags=["stream"], dependencies=[Depends(get_current_user_header_or_query)])
 
 _BOUNDARY = "frame"
+_SNAPSHOT_WAIT_SECONDS = 3.0
 _OFFLINE_JPEG = bytes.fromhex(  # 1x1 black JPEG placeholder when no frame is available
     "ffd8ffe000104a46494600010100000100010000ffdb004300080606070605080707070909080a0c140d0c0b0b0c19"
     "1213130f141d1a1f1e1d1a1c1c20242e2720222c231c1c2837292c30313434341f27393d38323c2e333432ffc00011"
@@ -42,5 +43,15 @@ async def mjpeg_stream():
 
 @router.get("/snapshot")
 async def snapshot():
-    jpeg = frame_bus.latest_jpeg if frame_bus.is_fresh(max_age=30.0) else _OFFLINE_JPEG
+    # The worker renders frames only while someone is subscribed, so with no live
+    # viewer (e.g. the camera line editor) a snapshot has to ask for one.
+    jpeg = frame_bus.latest_jpeg if frame_bus.is_fresh(max_age=1.0) else None
+    if jpeg is None:
+        queue = frame_bus.subscribe()
+        try:
+            jpeg = await asyncio.wait_for(queue.get(), timeout=_SNAPSHOT_WAIT_SECONDS)
+        except asyncio.TimeoutError:
+            jpeg = frame_bus.latest_jpeg if frame_bus.is_fresh(max_age=30.0) else _OFFLINE_JPEG
+        finally:
+            frame_bus.unsubscribe(queue)
     return Response(content=jpeg, media_type="image/jpeg", headers={"Cache-Control": "no-store"})

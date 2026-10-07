@@ -215,6 +215,7 @@ export function Cameras() {
                 }
               />
               <LineEditor
+                live={list.some((camera) => camera.id === editing.id && camera.is_active)}
                 value={editing.input}
                 onChange={(next) =>
                   setEditing({ ...editing, input: { ...editing.input, ...next } })

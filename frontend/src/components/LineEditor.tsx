@@ -27,14 +27,18 @@ const PTS: { xf: Field; yf: Field; line: "A" | "B" }[] = [
  * Click-to-place counting line(s) over a live camera snapshot. Click cycles
  * through line A start/end then the optional line B start/end; endpoints are
  * draggable. Two lines = a track must cross both in order to be counted.
- * All coordinates are stored in source-image pixels.
+ * All coordinates are stored in source-image pixels. The snapshot is the feed
+ * of the camera that is counting right now, so it is shown only when `live`
+ * says that is the camera being edited.
  */
 export function LineEditor({
   value,
   onChange,
+  live,
 }: {
   value: LinePoints;
   onChange: (next: Partial<LinePoints>) => void;
+  live: boolean;
 }) {
   const { t } = useLanguage();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -43,7 +47,9 @@ export function LineEditor({
   const [nextIdx, setNextIdx] = useState(0);
   const dragging = useRef<number | null>(null);
 
-  const snapshotSrc = "/api/stream/snapshot";
+  const [opened] = useState(() => Date.now());
+
+  const snapshotSrc = live ? `/api/stream/snapshot?t=${opened}` : null;
 
   const num = (f: Field) => (value[f] ?? null) as number | null;
 
