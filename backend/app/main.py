@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.middleware import AccessLogMiddleware
 from app.api.routes import (
-    auth, cameras, events, farm, inventory, settings as settings_routes, statistics, stream, system,
+    auth, cameras, events, farm, inventory, settings as settings_routes, statistics, stream, system, users,
 )
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -77,7 +77,7 @@ if settings.cors_origins:
                        allow_methods=["*"], allow_headers=["*"],
                        expose_headers=["X-Request-ID", "X-Total-Count"])
 for router in (system.router, auth.router, settings_routes.router, cameras.router, events.router,
-               farm.router, inventory.router, statistics.router, stream.router):
+               farm.router, inventory.router, statistics.router, stream.router, users.router):
     app.include_router(router, prefix="/api")
 
 

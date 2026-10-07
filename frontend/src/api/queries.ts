@@ -12,6 +12,7 @@ import type {
   InventoryBalance,
   InventoryMovement,
   Me,
+  Role,
   SettingsInput,
   SystemStatus,
   Totals,
@@ -26,6 +27,7 @@ export const keys = {
   events: (query: EventQuery) => ["events", query] as const,
   cameras: ["cameras"] as const,
   settings: ["settings"] as const,
+  users: ["users"] as const,
   farmZones: ["farm", "zones"] as const,
   animalGroups: ["farm", "groups"] as const,
   inventory: ["inventory", "summary"] as const,
@@ -236,5 +238,42 @@ export function useRestartWorker() {
   return useMutation({
     mutationFn: () => apiFetch<{ restarting: boolean }>("/worker/restart", { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.worker }),
+  });
+}
+
+export function useUsers(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.users,
+    queryFn: async () => (await apiFetch<Me[]>("/users")).data,
+    enabled,
+  });
+}
+
+export function useUserMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: keys.users });
+  return {
+    create: useMutation({
+      mutationFn: (input: { username: string; password: string; role: Role }) =>
+        apiFetch<Me>("/users", { body: input }),
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: ({
+        id,
+        input,
+      }: {
+        id: number;
+        input: Partial<{ role: Role; is_active: boolean; password: string }>;
+      }) => apiFetch<Me>(`/users/${id}`, { method: "PUT", body: input }),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: { current_password: string; new_password: string }) =>
+      apiFetch<void>("/auth/change-password", { body: input }),
   });
 }

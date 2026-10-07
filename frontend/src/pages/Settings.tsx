@@ -9,6 +9,7 @@ import {
 } from "../api/queries";
 import type { SettingsInput } from "../api/types";
 import { useAuth } from "../auth/useAuth";
+import { AccountCard, UsersCard } from "../components/UserAdmin";
 import { useLanguage } from "../i18n/useLanguage";
 import { languages } from "../i18n/translations";
 import { statusLabel } from "../lib/format";
@@ -224,6 +225,9 @@ export function Settings() {
           {restart.isSuccess ? t.restartRequested : t.restartWorker}
         </button>
       </div>
+
+      <AccountCard />
+      {isAdmin && <UsersCard />}
     </main>
   );
 }

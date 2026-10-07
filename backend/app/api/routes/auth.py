@@ -6,9 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
-from app.api.schemas import LoginResponse, UserRead
+from app.api.schemas import LoginResponse, PasswordChange, UserRead
 from app.core.config import get_settings
-from app.core.security import SESSION_COOKIE, create_access_token, verify_password
+from app.core.security import SESSION_COOKIE, create_access_token, hash_password, verify_password
 from app.db.database import get_session
 from app.db.models import User
 
@@ -42,3 +42,13 @@ async def logout(response: Response, _user: User = Depends(get_current_user)):
 @router.get("/me", response_model=UserRead)
 async def me(user: User = Depends(get_current_user)):
     return user
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(payload: PasswordChange, user: User = Depends(get_current_user),
+                          session: AsyncSession = Depends(get_session)):
+    account = await session.get(User, user.id)
+    if not verify_password(payload.current_password, account.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+    account.password_hash = hash_password(payload.new_password)
+    await session.commit()

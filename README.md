@@ -104,6 +104,10 @@ the worker to it. Camera and detection-setting changes restart the worker automa
 camera's `source` at `rtsp://user:pass@host/stream` for a real feed; credentials are masked
 (`rtsp://user:***@host`) in every API response.
 
+**Users.** Everyone can change their own password under Settings → Account. An admin can
+add users there (admin or read-only viewer), set a password for them, and deactivate them;
+users are deactivated rather than deleted, and the last active admin cannot be removed.
+
 The API accepts bearer JWTs. Browser media and WebSocket requests use the same token in an
 HttpOnly, SameSite cookie, so credentials never appear in stream URLs or access logs. Logging
 out removes that cookie.

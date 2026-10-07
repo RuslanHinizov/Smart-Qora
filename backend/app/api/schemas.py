@@ -107,6 +107,23 @@ class UserRead(BaseModel):
     is_active: bool
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=120, pattern=r"^[A-Za-z0-9_.-]+$")
+    password: str = Field(min_length=8, max_length=128)
+    role: Role = Role.viewer
+
+
+class UserUpdate(BaseModel):
+    role: Role | None = None
+    is_active: bool | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
 class SettingsRead(BaseModel):
     default_language: str
     telegram_configured: bool

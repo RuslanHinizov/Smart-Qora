@@ -245,6 +245,28 @@ const en = {
     "A gate crossing could not update the inventory — the source zone does not have enough animals recorded. Physical verification needed.",
   inventoryUnconfiguredAlert:
     "A gate crossing is not linked to any animal group. Check the groups on the Farm page.",
+
+  // account & users
+  accountSection: "Account",
+  signedInAs: "Signed in as",
+  currentPassword: "Current password",
+  newPassword: "New password",
+  passwordHint: "At least 8 characters.",
+  changePassword: "Change password",
+  passwordChanged: "Password changed",
+  passwordChangeError: "Could not change the password. Check the current password.",
+  usersSection: "Users",
+  usersHint:
+    "Viewers can see everything but cannot change anything. A user who should no longer sign in is deactivated, not deleted.",
+  role: "Role",
+  roleAdmin: "Admin",
+  roleViewer: "Viewer",
+  addUser: "Add user",
+  userSaveError:
+    "Could not save the user. The username may be taken, or this is the last active admin.",
+  resetPassword: "Set password",
+  deactivate: "Deactivate",
+  activate: "Activate",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -440,7 +462,8 @@ const ru: Dictionary = {
   farmSaveStart: "Сохранить начальный остаток",
   farmCurrent: "Текущие остатки",
   farmPhysical: "Сверка с фактическим подсчётом",
-  farmPhysicalHint: "Если есть разница, укажите фактическое число. Исправление сохранится отдельно.",
+  farmPhysicalHint:
+    "Если есть разница, укажите фактическое число. Исправление сохранится отдельно.",
   farmHistory: "История перемещений",
   farmNoAreas: "Зоны ещё не добавлены.",
   farmNoGroups: "Группы животных ещё не добавлены.",
@@ -482,6 +505,28 @@ const ru: Dictionary = {
     "Проход через ворота не обновил учётный остаток — в исходной зоне недостаточно животных. Нужна физическая сверка.",
   inventoryUnconfiguredAlert:
     "Проход через ворота не привязан к группе животных. Проверьте группы на странице «Ферма».",
+
+  // account & users
+  accountSection: "Учётная запись",
+  signedInAs: "Вы вошли как",
+  currentPassword: "Текущий пароль",
+  newPassword: "Новый пароль",
+  passwordHint: "Не менее 8 символов.",
+  changePassword: "Сменить пароль",
+  passwordChanged: "Пароль изменён",
+  passwordChangeError: "Не удалось сменить пароль. Проверьте текущий пароль.",
+  usersSection: "Пользователи",
+  usersHint:
+    "Наблюдатель видит всё, но ничего не может менять. Пользователя, которому больше не нужен вход, отключают, а не удаляют.",
+  role: "Роль",
+  roleAdmin: "Администратор",
+  roleViewer: "Наблюдатель",
+  addUser: "Добавить пользователя",
+  userSaveError:
+    "Не удалось сохранить пользователя. Возможно, имя занято или это последний активный администратор.",
+  resetPassword: "Задать пароль",
+  deactivate: "Отключить",
+  activate: "Включить",
 };
 
 const kk: Dictionary = {
@@ -715,6 +760,28 @@ const kk: Dictionary = {
     "Қақпадан өту есептегі қалдықты жаңарта алмады — көзі аймақта мал жеткіліксіз. Физикалық тексеру керек.",
   inventoryUnconfiguredAlert:
     "Қақпадан өту ешбір мал тобына байланыстырылмады. «Ферма» бетінде топтарды тексеріңіз.",
+
+  // account & users
+  accountSection: "Тіркелгі",
+  signedInAs: "Кірген пайдаланушы",
+  currentPassword: "Ағымдағы құпия сөз",
+  newPassword: "Жаңа құпия сөз",
+  passwordHint: "Кемінде 8 таңба.",
+  changePassword: "Құпия сөзді өзгерту",
+  passwordChanged: "Құпия сөз өзгертілді",
+  passwordChangeError: "Құпия сөзді өзгерту мүмкін болмады. Ағымдағы құпия сөзді тексеріңіз.",
+  usersSection: "Пайдаланушылар",
+  usersHint:
+    "Бақылаушы бәрін көреді, бірақ ештеңені өзгерте алмайды. Енді кірмеуі тиіс пайдаланушы жойылмайды, өшіріледі.",
+  role: "Рөл",
+  roleAdmin: "Әкімші",
+  roleViewer: "Бақылаушы",
+  addUser: "Пайдаланушы қосу",
+  userSaveError:
+    "Пайдаланушыны сақтау мүмкін болмады. Аты бос емес немесе бұл соңғы белсенді әкімші болуы мүмкін.",
+  resetPassword: "Құпия сөз орнату",
+  deactivate: "Өшіру",
+  activate: "Қосу",
 };
 
 const tr: Dictionary = {
@@ -949,6 +1016,28 @@ const tr: Dictionary = {
     "Bir kapı geçişi envanteri güncelleyemedi — kaynak bölgede yeterli hayvan kaydı yok. Fiziksel sayım gerekli.",
   inventoryUnconfiguredAlert:
     "Bir kapı geçişi hiçbir hayvan grubuna bağlanamadı. Çiftlik sayfasından grupları kontrol edin.",
+
+  // account & users
+  accountSection: "Hesap",
+  signedInAs: "Giriş yapan",
+  currentPassword: "Mevcut parola",
+  newPassword: "Yeni parola",
+  passwordHint: "En az 8 karakter.",
+  changePassword: "Parolayı değiştir",
+  passwordChanged: "Parola değiştirildi",
+  passwordChangeError: "Parola değiştirilemedi. Mevcut parolayı kontrol edin.",
+  usersSection: "Kullanıcılar",
+  usersHint:
+    "İzleyici her şeyi görür ama hiçbir şeyi değiştiremez. Artık giriş yapmaması gereken kullanıcı silinmez, pasifleştirilir.",
+  role: "Rol",
+  roleAdmin: "Yönetici",
+  roleViewer: "İzleyici",
+  addUser: "Kullanıcı ekle",
+  userSaveError:
+    "Kullanıcı kaydedilemedi. Kullanıcı adı alınmış olabilir ya da bu son aktif yönetici.",
+  resetPassword: "Parola belirle",
+  deactivate: "Pasifleştir",
+  activate: "Etkinleştir",
 };
 
 export const translations: Record<Language, Dictionary> = { ru, kk, en, tr };
