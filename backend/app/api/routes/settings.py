@@ -40,7 +40,10 @@ async def read_settings(session: AsyncSession = Depends(get_session)):
 @router.put("/settings", response_model=SettingsRead, dependencies=[Depends(require_admin)])
 async def update_settings(payload: SettingsUpdate, request: Request, session: AsyncSession = Depends(get_session)):
     row = await _get_settings_row(session)
-    changed = payload.model_dump(exclude_unset=True)
+    # The Settings page submits every field it shows, so only values that really
+    # differ may restart the Telegram bot or the vision worker (which drops tracks).
+    changed = {key: value for key, value in payload.model_dump(exclude_unset=True).items()
+               if getattr(row, key) != value}
     for key, value in changed.items():
         setattr(row, key, value)
     await session.commit()

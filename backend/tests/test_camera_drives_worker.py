@@ -108,3 +108,32 @@ async def test_camera_with_history_cannot_be_deleted(client, admin_token, auth, 
 async def test_detection_settings_restart_worker(client, admin_token, auth, clean_db, fake_supervisor):
     response = await client.put("/api/settings", headers=auth(admin_token), json={"default_confidence": .4})
     assert response.status_code == 200 and fake_supervisor.restart_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_resaving_unchanged_settings_does_not_restart_worker_or_bot(
+        client, admin_token, auth, clean_db, fake_supervisor, monkeypatch):
+    """The Settings page submits every field on each save; changing only the
+    language must not interrupt counting or bounce the Telegram bot."""
+    from app.api.routes import settings as settings_routes
+
+    applied = []
+
+    async def fake_apply():
+        applied.append(1)
+
+    monkeypatch.setattr(settings_routes, "apply_telegram_config", fake_apply)
+    current = (await client.get("/api/settings", headers=auth(admin_token))).json()
+    body = {key: current[key] for key in (
+        "telegram_aggregation_seconds", "telegram_digest_hour", "telegram_idle_hours",
+        "default_confidence", "default_iou", "default_frame_skip")}
+    response = await client.put("/api/settings", headers=auth(admin_token),
+                                json={**body, "default_language": "tr"})
+    assert response.status_code == 200 and response.json()["default_language"] == "tr"
+    assert fake_supervisor.restart_calls == 0 and applied == []
+
+    response = await client.put("/api/settings", headers=auth(admin_token),
+                                json={**body, "default_language": "tr", "default_confidence": 0.4,
+                                      "telegram_aggregation_seconds": 9})
+    assert response.status_code == 200
+    assert fake_supervisor.restart_calls == 1 and applied == [1]
