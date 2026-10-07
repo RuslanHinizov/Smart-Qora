@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 import pytest
 from sqlalchemy import func, select
 
+from app.core.calendar import site_day
 from app.core.config import get_settings
 from app.db.database import SessionLocal
 from app.db.models import AnimalEvent, DailyStatistic, LineDirection
@@ -46,7 +47,7 @@ async def test_rollup_matches_raw_events(monkeypatch, clean_db):
 @pytest.mark.asyncio
 async def test_history_endpoint_shape(client, admin_token, auth, monkeypatch, clean_db):
     await _run_crossings(monkeypatch, straight_crossing_script(track_id=9, cls_index=0))
-    today = date.today().isoformat()
+    today = site_day().isoformat()  # rollups use the site calendar, not the runner's
     resp = await client.get(f"/api/statistics/history?from={today}&to={today}", headers=auth(admin_token))
     assert resp.status_code == 200
     body = resp.json()

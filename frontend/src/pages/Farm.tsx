@@ -143,7 +143,10 @@ export function Farm() {
                       className="input"
                       value={editingZone.draft.name}
                       onChange={(e) =>
-                        setEditingZone({ id: zone.id, draft: { ...editingZone.draft, name: e.target.value } })
+                        setEditingZone({
+                          id: zone.id,
+                          draft: { ...editingZone.draft, name: e.target.value },
+                        })
                       }
                     />
                     <select
@@ -201,7 +204,10 @@ export function Farm() {
                         : `${t[ZONE_KIND_KEY[zone.kind]]} · ${t.inactive}`}
                     </small>
                     {isAdmin && (
-                      <button className="btn sm ghost" onClick={() => setEditingZone({ id: zone.id, draft: zone })}>
+                      <button
+                        className="btn sm ghost"
+                        onClick={() => setEditingZone({ id: zone.id, draft: zone })}
+                      >
                         {t.edit}
                       </button>
                     )}
@@ -282,7 +288,10 @@ export function Farm() {
                       onChange={(e) =>
                         setEditingGroup({
                           id: group.id,
-                          draft: { ...editingGroup.draft, species: e.target.value as AnimalSpecies },
+                          draft: {
+                            ...editingGroup.draft,
+                            species: e.target.value as AnimalSpecies,
+                          },
                         })
                       }
                     >
@@ -299,7 +308,10 @@ export function Farm() {
                         onChange={(e) =>
                           setEditingGroup({
                             id: group.id,
-                            draft: { ...editingGroup.draft, is_default_for_species: e.target.checked },
+                            draft: {
+                              ...editingGroup.draft,
+                              is_default_for_species: e.target.checked,
+                            },
                           })
                         }
                       />
@@ -323,7 +335,10 @@ export function Farm() {
                       disabled={!editingGroup.draft.name || updateGroup.isPending}
                       onClick={() =>
                         submit(async () => {
-                          await updateGroup.mutateAsync({ id: group.id, input: editingGroup.draft });
+                          await updateGroup.mutateAsync({
+                            id: group.id,
+                            input: editingGroup.draft,
+                          });
                           setEditingGroup(null);
                         })
                       }
@@ -343,7 +358,9 @@ export function Farm() {
                         ? t[SPECIES_KEY[group.species]]
                         : `${t[SPECIES_KEY[group.species]]} · ${t.inactive}`}
                     </small>
-                    {group.is_default_for_species && <span className="pill">{t.farmDefaultBadge}</span>}
+                    {group.is_default_for_species && (
+                      <span className="pill">{t.farmDefaultBadge}</span>
+                    )}
                     {isAdmin && (
                       <button
                         className="btn sm ghost"
@@ -571,7 +588,11 @@ export function Farm() {
             <p className="hint">{t.farmTransferHint}</p>
             {isAdmin && (
               <div className="farm-transfer-grid">
-                <select className="select" value={transferGroup} onChange={(e) => setTransferGroup(e.target.value)}>
+                <select
+                  className="select"
+                  value={transferGroup}
+                  onChange={(e) => setTransferGroup(e.target.value)}
+                >
                   <option value="">{t.farmStep2}</option>
                   {groupList.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -579,7 +600,11 @@ export function Farm() {
                     </option>
                   ))}
                 </select>
-                <select className="select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
+                <select
+                  className="select"
+                  value={transferFrom}
+                  onChange={(e) => setTransferFrom(e.target.value)}
+                >
                   <option value="">{t.fromZone}</option>
                   {zoneList.map((zone) => (
                     <option key={zone.id} value={zone.id}>
@@ -587,7 +612,11 @@ export function Farm() {
                     </option>
                   ))}
                 </select>
-                <select className="select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                <select
+                  className="select"
+                  value={transferTo}
+                  onChange={(e) => setTransferTo(e.target.value)}
+                >
                   <option value="">{t.toZone}</option>
                   {zoneList.map((zone) => (
                     <option key={zone.id} value={zone.id}>
