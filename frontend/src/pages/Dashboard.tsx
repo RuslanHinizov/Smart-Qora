@@ -22,8 +22,12 @@ export function Dashboard() {
   const inventory = useInventory();
   const zones = useFarmZones();
   const [selected, setSelected] = useState<AnimalSpecies | null>(null);
-  const rows = inventory.data ?? [];
   const zoneKinds = new Map((zones.data ?? []).map((zone) => [zone.id, zone.kind]));
+  // An EXTERNAL zone is the farm boundary, not a place animals are kept: its
+  // balance is "net brought in from outside" (often negative), never a headcount.
+  const rows = (inventory.data ?? []).filter(
+    (row) => (zoneKinds.get(row.zone_id) ?? "EXTERNAL") !== "EXTERNAL",
+  );
   const cameraOnline = status.data?.camera === "ONLINE";
   const totals = stats.data ?? { total_in: 0, total_out: 0, current: 0 };
   const byType = Object.fromEntries(
@@ -44,7 +48,7 @@ export function Dashboard() {
       .filter((row) => kinds.includes(zoneKinds.get(row.zone_id) ?? "EXTERNAL"))
       .reduce((sum, row) => sum + row.quantity, 0);
   const inPen = quantityIn(["PEN", "QUARANTINE"]);
-  const outside = quantityIn(["PASTURE", "EXTERNAL"]);
+  const outside = quantityIn(["PASTURE"]);
   const visibleRows = selected ? rows.filter((row) => row.species === selected) : rows;
   const inventoryHealth = (status.data?.inventory_health ?? "ok") as InventoryHealth;
   return (
@@ -78,7 +82,9 @@ export function Dashboard() {
           <div className="panel-head">
             <div>
               <span className="section-title">{t.liveCamera}</span>
-              <h3>{cameraOnline ? t.liveCamera : statusLabel(t, status.data?.camera ?? "OFFLINE")}</h3>
+              <h3>
+                {cameraOnline ? t.liveCamera : statusLabel(t, status.data?.camera ?? "OFFLINE")}
+              </h3>
             </div>
             <span className={`badge ${cameraOnline ? "" : "off"}`}>
               <span className="dot" />
