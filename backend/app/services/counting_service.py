@@ -71,7 +71,7 @@ class CountingService:
         self.preview_only = False
         self.frame_number = 0
         self.inventory_health = "ok"  # "ok" | "mismatch" | "unconfigured" — surfaced on /api/status
-        self._last_inventory_alert = 0.0
+        self._last_inventory_alert = float("-inf")  # monotonic() starts near 0 after boot
 
     def _set_totals(self, totals):
         self.totals.total_in = totals["total_in"]
