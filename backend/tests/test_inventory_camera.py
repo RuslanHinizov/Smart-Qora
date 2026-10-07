@@ -161,3 +161,60 @@ async def test_default_group_resolves_a_species_shared_by_two_groups(monkeypatch
         assert movement.group_id == lambs_id
         assert movement.group_id != adults_group_id  # the non-default group was not picked
     assert service.inventory_health == "ok"
+
+
+@pytest.mark.asyncio
+async def test_demo_loop_reset_does_not_inflate_inventory_or_erase_history(monkeypatch, clean_db, tmp_path):
+    """VIDEO_LOOP_RESET replays a demo file as a fresh session each loop. However
+    many loops ran, stock must equal the starting count plus the current loop's
+    own crossings, and unrelated history (other days, other sessions) must stay."""
+    from datetime import timedelta
+
+    from sqlalchemy import func, update
+
+    from app.core.calendar import site_day
+    from app.db.models import AnimalEvent, Camera, DailyStatistic, Direction, HerdState
+
+    pen_id, outside_id, group_id = await _farm()
+    await _camera_with_zones(pen_id, outside_id)
+    clip = tmp_path / "demo.mp4"
+    clip.write_bytes(b"demo")
+    yesterday = site_day() - timedelta(days=1)
+    async with SessionLocal() as db:
+        camera = await db.scalar(select(Camera))
+        camera.source = str(clip)
+        db.add(InventoryBalance(zone_id=pen_id, group_id=group_id, quantity=10))
+        db.add(DailyStatistic(date=yesterday, animal_type="sheep", total_in=7, total_out=2, current_count=5))
+        db.add(AnimalEvent(camera_id=camera.id, animal_type="sheep", tracking_id=99, session_id="older",
+                           crossing_sequence=1, direction=Direction.IN, confidence=0.9))
+        await db.execute(update(HerdState).values(current_inside=5))
+        await db.commit()
+
+    script = straight_crossing_script(track_id=1, cls_index=0)
+    FakeCameraStream.instances = 0
+    _install_fakes(monkeypatch, script)
+    settings = get_settings().model_copy(update={"video_loop": True, "video_loop_reset": True})
+    service = cs.CountingService(settings)
+    task = asyncio.create_task(service.run())
+    await asyncio.sleep(0.5)
+    service.stop()
+    await task
+
+    assert FakeCameraStream.instances >= 3  # several loops, so several resets
+    async with SessionLocal() as db:
+        counted = await db.scalar(select(func.count()).select_from(AnimalEvent)
+                                  .where(AnimalEvent.session_id != "older"))
+        assert counted in (0, 1)  # stopped either right after a reset or mid-loop
+        assert await db.scalar(select(func.count()).select_from(AnimalEvent)
+                               .where(AnimalEvent.session_id == "older")) == 1
+        pen = await db.get(InventoryBalance, (pen_id, group_id))
+        assert pen.quantity == 10 + counted
+        outside = await db.get(InventoryBalance, (outside_id, group_id))
+        assert (outside.quantity if outside else 0) == -counted
+        assert await db.scalar(select(func.count()).select_from(InventoryMovement)) == counted
+        assert await db.scalar(select(HerdState.current_inside)) == 5 + counted
+        old = await db.scalar(select(DailyStatistic).where(DailyStatistic.date == yesterday))
+        assert (old.total_in, old.total_out) == (7, 2)
+        today_in = await db.scalar(select(func.coalesce(func.sum(DailyStatistic.total_in), 0))
+                                   .where(DailyStatistic.date == site_day()))
+        assert today_in == counted

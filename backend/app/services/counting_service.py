@@ -3,6 +3,7 @@ import logging
 import time
 import hashlib
 from uuid import uuid4
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,11 +11,11 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import Settings
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, or_, select, update
 
 from app.db.database import SessionLocal
 from app.db.models import (
-    AnimalEvent, AppSettings, Camera, DailyStatistic, Direction, FarmZone, HerdState,
+    AnimalEvent, AppSettings, Camera, DailyStatistic, Direction, FarmZone,
     InventoryBalance, InventoryMovement, MovementKind, RecordingProgress,
 )
 from app.core.calendar import site_day
@@ -69,7 +70,6 @@ class CountingService:
         self.resume_frame = 0
         self.preview_only = False
         self.frame_number = 0
-        self.loop_inventory_baseline: dict[tuple[int, int], int] = {}
         self.inventory_health = "ok"  # "ok" | "mismatch" | "unconfigured" — surfaced on /api/status
         self._last_inventory_alert = 0.0
 
@@ -118,8 +118,6 @@ class CountingService:
             is_file = isinstance(source, str) and Path(source).is_file()
             loop_file = is_file and self.settings.video_loop
             reset_demo_loop = loop_file and self.settings.video_loop_reset
-            if reset_demo_loop:
-                await self._capture_loop_inventory_baseline()
             if is_file:
                 self.recording_key = await asyncio.to_thread(recording_fingerprint, source)
                 self.session_id = self.recording_key
@@ -234,31 +232,64 @@ class CountingService:
             if self.stream is not None:
                 self.stream.close()
 
-    async def _capture_loop_inventory_baseline(self) -> None:
-        """Remember the farm state before a local demonstration recording starts."""
-        async with SessionLocal() as session:
-            balances = (await session.scalars(select(InventoryBalance))).all()
-            self.loop_inventory_baseline = {
-                (balance.zone_id, balance.group_id): balance.quantity for balance in balances
-            }
-
     async def _reset_demo_loop(self) -> None:
-        """Reset a local test-file loop without changing a real camera's history.
+        """Undo what this demo recording counted, so its next loop starts clean.
 
-        This is deliberately opt-in.  RTSP cameras and normal recorded evidence
-        must retain their events; a looping demo video should look like a new
-        live session every time it starts over.
+        This is deliberately opt-in.  Only the recording's own events are removed
+        and their effect on the daily rollups, the herd count and the farm
+        inventory is reversed; other cameras, earlier days and manual inventory
+        entries are left alone.
         """
         async with SessionLocal() as session:
-            event_ids = select(AnimalEvent.id).where(AnimalEvent.camera_id == self.camera_id)
+            events = (await session.execute(
+                select(AnimalEvent.id, AnimalEvent.timestamp, AnimalEvent.animal_type, AnimalEvent.direction)
+                .where(AnimalEvent.camera_id == self.camera_id, AnimalEvent.session_id == self.session_id)
+            )).all()
+            event_ids = [event.id for event in events]
+            rollup: Counter = Counter()
+            for _, timestamp, animal_type, direction in events:
+                if timestamp.tzinfo is None:  # SQLite returns naive UTC
+                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+                rollup[site_day(timestamp), animal_type, direction == Direction.IN] += 1
+            net = 0
+            for (day, animal_type, is_in), count in rollup.items():
+                d_in, d_out = (count, 0) if is_in else (0, count)
+                net += d_in - d_out
+                await upsert_daily(session, day, animal_type, -d_in, -d_out)
+            await session.execute(delete(DailyStatistic).where(
+                DailyStatistic.date.in_({day for day, _, _ in rollup}),
+                DailyStatistic.total_in <= 0, DailyStatistic.total_out <= 0,
+            ))
+
+            movements = (await session.scalars(
+                select(InventoryMovement).where(InventoryMovement.source_event_id.in_(event_ids))
+            )).all()
+            touched: set[tuple[int, int]] = set()
+            for movement in movements:
+                for zone_id, delta in ((movement.from_zone_id, movement.quantity),
+                                       (movement.to_zone_id, -movement.quantity)):
+                    if zone_id is None:
+                        continue
+                    touched.add((zone_id, movement.group_id))
+                    await session.execute(update(InventoryBalance).where(
+                        InventoryBalance.zone_id == zone_id, InventoryBalance.group_id == movement.group_id,
+                    ).values(quantity=InventoryBalance.quantity + delta))
             await session.execute(delete(InventoryMovement).where(InventoryMovement.source_event_id.in_(event_ids)))
-            await session.execute(delete(AnimalEvent).where(AnimalEvent.camera_id == self.camera_id))
-            await session.execute(delete(DailyStatistic))
-            await session.execute(update(HerdState).where(HerdState.id == 1).values(current_inside=0, baseline=0))
-            for (zone_id, group_id), quantity in self.loop_inventory_baseline.items():
-                await session.execute(update(InventoryBalance).where(
-                    InventoryBalance.zone_id == zone_id, InventoryBalance.group_id == group_id,
-                ).values(quantity=quantity))
+            for zone_id, group_id in touched:
+                # A balance row the camera created and nothing else ever used goes
+                # back to "not entered yet" rather than lingering as a zero.
+                still_used = await session.scalar(select(InventoryMovement.id).where(
+                    InventoryMovement.group_id == group_id,
+                    or_(InventoryMovement.from_zone_id == zone_id, InventoryMovement.to_zone_id == zone_id),
+                ).limit(1))
+                if still_used is None:
+                    await session.execute(delete(InventoryBalance).where(
+                        InventoryBalance.zone_id == zone_id, InventoryBalance.group_id == group_id,
+                        InventoryBalance.quantity == 0,
+                    ))
+            await session.execute(delete(AnimalEvent).where(AnimalEvent.id.in_(event_ids)))
+            if net:
+                await bump_herd_state(session, -net)
             if self.recording_key:
                 await session.execute(update(RecordingProgress).where(
                     RecordingProgress.camera_id == self.camera_id,
@@ -266,12 +297,12 @@ class CountingService:
                 ).values(last_frame=0, completed=False))
             await session.commit()
             self._set_totals(await today_totals(session))
-        self.current_inside = 0
         await websockets.broadcast({
-            "type": "statistics", "in": 0, "out": 0, "current": 0,
+            "type": "statistics", "in": self.totals.total_in, "out": self.totals.total_out,
+            "current": self.current_inside,
             "camera": self.stream.status if self.stream else "ONLINE", "ai": "ACTIVE",
         })
-        logger.info("demo_video_loop_reset", extra={"camera_id": self.camera_id})
+        logger.info("demo_video_loop_reset", extra={"camera_id": self.camera_id, "events": len(event_ids)})
 
     async def _publish_frame(self, frame, result) -> None:
         tally = f"IN {self.totals.total_in}   OUT {self.totals.total_out}   INSIDE {self.current_inside}"
