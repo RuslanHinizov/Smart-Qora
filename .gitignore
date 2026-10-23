@@ -39,3 +39,6 @@ backups/
 # Large local-only data (18 GB dataset, raw test videos) — fetch separately, never commit.
 datasets/CattleEyeView Dataset/
 videos/sheep_videos/
+# Database backups (contain password hashes and the Telegram token)
+yedek.sql
+backup.sql

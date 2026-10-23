@@ -53,6 +53,8 @@ git clone https://github.com/RuslanHinizov/Smart-Qora.git && cd Smart-Qora
 docker compose up -d --build
 ```
 
+Step-by-step setup on a new Windows machine (Turkish, incl. moving the database): [KURULUM.md](KURULUM.md).
+
 Open `http://localhost:5173`, sign in `admin` / `admin`. That's it — a fine-tuned
 sheep model (`models/best.pt`) and a demo clip (`videos/crop_23.11.23-12.MP4`) are
 bundled, so the dashboard starts counting on the looping demo video with nothing
