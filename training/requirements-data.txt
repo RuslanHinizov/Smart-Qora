@@ -1,0 +1,3 @@
+# Optional dataset acquisition tools. Not needed to run Smart Qora or train
+# an already prepared YOLO dataset.
+fiftyone>=1.11,<2
